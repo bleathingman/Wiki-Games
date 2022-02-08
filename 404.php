@@ -7,7 +7,7 @@
     <link href="style.css" rel="stylesheet">
     <title>Document</title>
 </head>
-<body>
+<body class="erreur">
     <!--Header-->
   <?php include_once('header.php'); ?>
     <div class="container">

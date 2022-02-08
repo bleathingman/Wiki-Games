@@ -1,9 +1,5 @@
 <!DOCTYPE html>
 <html lang="fr">
-<<<<<<< HEAD
-
-=======
->>>>>>> syko
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -17,9 +13,9 @@
   <!-- Swiper -->
   <div class="swiper mySwiper">
     <div class="swiper-wrapper">
-      <div class="swiper-slide slide-1"><img src="images/clicker-heros.jpg" alt="Clicker Heros"></div>
-      <div class="swiper-slide slide-2"><img src="images/amongus.jpg" alt="Among Us"></div>
-      <div class="swiper-slide slide-3"><img src="images/cave-crawler.jpg" alt="Cave Crawler"></div>
+      <div class="swiper-slide slide-1"><a href="clicker-heroes.php"><img src="images/clicker-heros.jpg" alt="Clicker Heros"></div></a>
+      <div class="swiper-slide slide-2"><a href="amongus.php"><img src="images/amongus.jpg" alt="Among Us"></div></a>
+      <div class="swiper-slide slide-3" ><a href="cave-crawler.php"><img src="images/cave-crawler.jpg" alt="Cave Crawler"></div></a>
       <div class="swiper-slide slide-4">Slide 4</div>
       <div class="swiper-slide slide-5">Slide 5</div>
       <div class="swiper-slide slide-6">Slide 6</div>
@@ -31,7 +27,7 @@
     <div class="swiper-button-prev"></div>
     <div class="swiper-pagination"></div>
   </div>
-  <a class="btn btn-primary btn-lg" href="toto.php" role="button">Learn more</a>
+  <a class="btn btn-primary btn-lg" href="404.php" role="button">Go to 404</a>
 
   <!-- Initialize Swiper -->
   <script>
