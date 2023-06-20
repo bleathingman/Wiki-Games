@@ -26,8 +26,8 @@ $game = $stmt->fetch();
     <input type="hidden" name="id" value="<?php echo $game['id']; ?>">
     <label for="name">Name:</label>
     <input type="text" id="name" name="name" value="<?php echo $game['name']; ?>">
-    <label for="description">Description:</label>
-    <input type="text" id="description" name="description" value="<?php echo $game['description']; ?>">
+    <label for="price">Prix:</label>
+    <input type="text" id="price" name="price" value="<?php echo $game['price']; ?>">
     <label for="image">Image:</label>
     <input type="file" id="image" name="image">
     <label for="link">Link:</label>

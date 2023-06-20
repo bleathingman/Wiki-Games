@@ -8,6 +8,11 @@
 body {
     background-color: #1B2739 !important;
 }
+
+p {
+    color: #c7d5e0;
+}
+
 .erreur {
     margin: 0;
     padding: 0;
@@ -52,6 +57,14 @@ body {
     color: rgb(209, 209, 209);
 }
 
+/** Slider */
+
+.swiper-slide img {
+    max-width: 100%;  /* limit the width of the image to the width of its parent element */
+    height: auto;  /* set the height automatically based on the width to keep aspect ratio */
+}
+
+
 /** List Game */
 
 body {
@@ -62,7 +75,7 @@ body {
 
 .games-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 1rem;
     padding: 1rem;
     max-width: 1200px;
@@ -70,14 +83,12 @@ body {
 }
 
 .game-card {
+    max-height: 410px;
+    overflow: hidden;
     background: #16202d; /* slightly lighter than the page background */
     border-radius: 4px;
     padding: 1rem;
     transition: all .3s ease;
-}
-
-.game-card:hover {
-    transform: scale(1.03);
 }
 
 .game-card img {
@@ -105,5 +116,6 @@ body {
 }
 
 .game-card a:hover {
-    background: #82c8e6; /* lighter blue background on hover */
+    background: #82c8e6;
+    color: #000;
 }

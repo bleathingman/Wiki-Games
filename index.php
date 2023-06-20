@@ -36,26 +36,17 @@ $games = $stmt->fetchAll();
   <!-- Swiper -->
   <div class="swiper mySwiper">
     <div class="swiper-wrapper">
-      <div class="swiper-slide slide-1">
-        <a href="clicker-heroes.php"><img src="images/clicker-heros.jpg" alt="Clicker Heros"></a>
-      </div>
-      <div class="swiper-slide slide-2">
-        <a href="amongus.php"><img src="images/amongus.jpg" alt="Among Us"></a>
-      </div>
-      <div class="swiper-slide slide-3">
-        <a href="cave-crawler.php"><img src="images/cave-crawler.jpg" alt="Cave Crawler"></a>
-      </div>
-      <div class="swiper-slide slide-4">Slide 4</div>
-      <div class="swiper-slide slide-5">Slide 5</div>
-      <div class="swiper-slide slide-6">Slide 6</div>
-      <div class="swiper-slide slide-7">Slide 7</div>
-      <div class="swiper-slide slide-8">Slide 8</div>
-      <div class="swiper-slide slide-9">Slide 9</div>
+      <?php foreach ($games as $game) : ?>
+        <div class="swiper-slide">
+          <a href="<?php echo $game['link']; ?>"><img src="./images/<?php echo $game['image']; ?>" alt="<?php echo $game['name']; ?>"></a>
+        </div>
+      <?php endforeach; ?>
     </div>
     <div class="swiper-button-next"></div>
     <div class="swiper-button-prev"></div>
     <div class="swiper-pagination"></div>
   </div>
+
 
   <a class="btn btn-primary btn-lg" href="404.php" role="button">Go to 404</a>
 
@@ -64,11 +55,22 @@ $games = $stmt->fetchAll();
       <div class="game-card">
         <img src="./images/<?php echo $game['image']; ?>" alt="<?php echo $game['name']; ?>">
         <h2><?php echo $game['name']; ?></h2>
-        <p><?php echo $game['description']; ?></p>
-        <a href="<?php echo $game['link']; ?>">Play Now</a>
-        <!-- Add the new Edit and Delete links -->
-        <a href="./formulaires/edit_games.php?id=<?php echo $game['id']; ?>">Edit</a>
-        <a href="./formulaires/delete_game.php?id=<?php echo $game['id']; ?>">Delete</a>
+        <p class="price">
+          <!-- Conditional price display -->
+          <?php
+          if ($game['price'] == 0) {
+            echo 'Gratuit';
+          } else {
+            echo $game['price'] . ' €';
+          }
+          ?>
+        </p>
+        <a target="_blank" href="<?php echo $game['link']; ?>">En savoir plus</a>
+        <div class="action-btn">
+          <!-- Add the new Edit and Delete links -->
+          <a href="./formulaires/edit_games.php?id=<?php echo $game['id']; ?>">Modifier</a>
+          <a href="./formulaires/delete_game.php?id=<?php echo $game['id']; ?>">Supprimer</a>
+        </div>
       </div>
     <?php endforeach; ?>
   </div>

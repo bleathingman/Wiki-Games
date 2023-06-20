@@ -9,17 +9,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     $id = $_POST['id'];
     $name = $_POST['name'];
-    $description = $_POST['description'];
+    $price = $_POST['price'];
     $link = $_POST['link'];
 
     // Update game details
-    $query = "UPDATE games SET name = :name, description = :description, link = :link WHERE id = :id";
+    $query = "UPDATE games SET name = :name, price = :price, link = :link WHERE id = :id";
 
     $stmt = $pdo->prepare($query);
 
     $stmt->bindParam(':id', $id);
     $stmt->bindParam(':name', $name);
-    $stmt->bindParam(':description', $description);
+    $stmt->bindParam(':price', $price);
     $stmt->bindParam(':link', $link);
 
     // Handling the image

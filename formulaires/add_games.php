@@ -26,8 +26,8 @@
         <label for="name">Game Name :</label><br>
         <input type="text" id="name" name="name" required><br>
 
-        <label for="description">Description :</label><br>
-        <textarea id="description" name="description" required></textarea><br>
+        <label for="description">Prix :</label><br>
+        <textarea id="price" name="price" required></textarea><br>
 
         <label for="image">Image :</label><br>
         <input type="file" id="image" name="image" required><br>
