@@ -22,7 +22,7 @@
           <br>
           <p class="card-text">Cave Crawler is a short, 2D side-scrolling action platformer.
             Explore caves filled with interesting enemies and fun platforming challenges.</p>
-            <br>
+          <br>
           <a href="https://store.steampowered.com/app/1865440/Cave_Crawler/" class="btn btn-secondary">Go Steam</a>
         </div>
       </div>
@@ -32,7 +32,7 @@
         <img src="images/himno.jpg" class="card-img-top" alt="Himno image">
         <div class="card-body">
           <h5 class="card-title">Himno</h5>
-          <p class="card-text">Himno is a peaceful, 2D platformer game with an infinite number of beautiful 
+          <p class="card-text">Himno is a peaceful, 2D platformer game with an infinite number of beautiful
             procedurally generated maps. Take a breath, and relax.</p>
           <a href="https://store.steampowered.com/app/931690/Himno/" class="btn btn-secondary">Go Steam</a>
         </div>

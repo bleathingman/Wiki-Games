@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -8,15 +9,17 @@
     <link rel="icon" type="image/x-icon" href="images/deadghost.svg">
     <title>404</title>
 </head>
+
 <body class="erreur">
     <!--Header-->
-  <?php include_once('header.php'); ?>
+    <?php include_once('header.php'); ?>
     <div class="container">
-            <!--Erreur 404-->
+        <!--Erreur 404-->
         <h2>Oups! Page non trouvée.</h2>
         <h1>404</h1>
         <p>Nous ne trouvons pas la page que vous recherchez.</p>
-        <a class="navbar-brand" href="home.php">Aller à la page d'accueil</a>
+        <a class="navbar-brand" href="index.php">Aller à la page d'accueil</a>
     </div>
 </body>
+
 </html>
