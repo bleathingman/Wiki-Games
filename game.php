@@ -2,21 +2,14 @@
 // Include database connection
 include_once('db_connect.php');
 
-// Get the game id from the URL
-$id = isset($_GET['id']) ? $_GET['id'] : die('ERROR: missing ID.');
-
-// Query to select the game
-$query = "SELECT * FROM games WHERE id = ? LIMIT 0,1";
+// Query to get all games
+$query = "SELECT * FROM games";
 
 $stmt = $pdo->prepare($query);
-
-$stmt->bindParam(1, $id);
-
 $stmt->execute();
 
-$row = $stmt->fetch(PDO::FETCH_ASSOC);
+$games = $stmt->fetchAll();
 
-// Now you can use $row['name'], $row['description'], etc. to display the game data.
 ?>
 
 <!DOCTYPE html>
@@ -26,16 +19,23 @@ $row = $stmt->fetch(PDO::FETCH_ASSOC);
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $row['name']; ?></title>
+    <title>All Games</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
     <?php include_once('header.php'); ?>
 
-    <h1><?php echo $row['name']; ?></h1>
-    <img src="images/<?php echo $row['image']; ?>" alt="<?php echo $row['name']; ?>">
-    <p><?php echo $row['description']; ?></p>
+    <div class="games-grid">
+        <?php foreach ($games as $game) : ?>
+            <div class="game-card">
+                <img src="images/<?php echo $game['image']; ?>" alt="<?php echo $game['name']; ?>">
+                <h2><?php echo $game['name']; ?></h2>
+                <p><?php echo $game['description']; ?></p>
+                <a href="<?php echo $game['link']; ?>">Play Now</a>
+            </div>
+        <?php endforeach; ?>
+    </div>
 
     <?php include_once('footer.php'); ?>
 </body>

@@ -1,3 +1,24 @@
+<?php
+session_start();
+
+if (isset($_SESSION['message'])) {
+  echo '<div class="message ' . $_SESSION['message_type'] . '">' . $_SESSION['message'] . '</div>';
+  unset($_SESSION['message'], $_SESSION['message_type']);
+}
+
+// Include database connection
+include_once('db_connect.php');
+
+// Query to get all games
+$query = "SELECT * FROM games";
+
+$stmt = $pdo->prepare($query);
+$stmt->execute();
+
+$games = $stmt->fetchAll();
+
+?>
+
 <!DOCTYPE html>
 <html lang="fr">
 
@@ -6,8 +27,6 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Wiki Games</title>
-  <link rel="stylesheet" href="path/to/your/css/file.css"> <!-- si vous avez un fichier CSS -->
-  <script src="path/to/your/swiper.js"></script> <!-- si vous avez un fichier JS pour Swiper -->
 </head>
 
 <body>
@@ -40,25 +59,38 @@
 
   <a class="btn btn-primary btn-lg" href="404.php" role="button">Go to 404</a>
 
-  <!-- Initialize Swiper -->
-  <script>
-    var swiper = new Swiper(".mySwiper", {
-      slidesPerView: 3,
-      spaceBetween: 30,
-      slidesPerGroup: 3,
-      loop: true,
-      loopFillGroupWithBlank: true,
-      pagination: {
-        el: ".swiper-pagination",
-        clickable: true,
-      },
-      navigation: {
-        nextEl: ".swiper-button-next",
-        prevEl: ".swiper-button-prev",
-      },
-    });
-  </script>
+  <div class="games-grid">
+    <?php foreach ($games as $game) : ?>
+      <div class="game-card">
+        <img src="./images/<?php echo $game['image']; ?>" alt="<?php echo $game['name']; ?>">
+        <h2><?php echo $game['name']; ?></h2>
+        <p><?php echo $game['description']; ?></p>
+        <a href="<?php echo $game['link']; ?>">Play Now</a>
+      </div>
+    <?php endforeach; ?>
+  </div>
+
+  <?php include_once('footer.php'); ?>
 
 </body>
 
 </html>
+
+<!-- Initialize Swiper -->
+<script>
+  var swiper = new Swiper(".mySwiper", {
+    slidesPerView: 3,
+    spaceBetween: 30,
+    slidesPerGroup: 3,
+    loop: true,
+    loopFillGroupWithBlank: true,
+    pagination: {
+      el: ".swiper-pagination",
+      clickable: true,
+    },
+    navigation: {
+      nextEl: ".swiper-button-next",
+      prevEl: ".swiper-button-prev",
+    },
+  });
+</script>

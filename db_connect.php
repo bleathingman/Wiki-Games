@@ -1,6 +1,6 @@
 <?php
 $host = 'localhost'; // l'hôte de votre base de données, généralement 'localhost'
-$db   = 'games'; // le nom de votre base de données
+$db   = 'wiki_games'; // le nom de votre base de données
 $user = 'root'; // votre nom d'utilisateur pour la base de données
 $pass = ''; // votre mot de passe pour la base de données
 
