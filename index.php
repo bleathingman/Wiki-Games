@@ -7,7 +7,7 @@ if (isset($_SESSION['message'])) {
 }
 
 // Include database connection
-include_once('db_connect.php');
+include_once('./db_connect.php');
 
 // Query to get all games
 $query = "SELECT * FROM games";
@@ -66,9 +66,13 @@ $games = $stmt->fetchAll();
         <h2><?php echo $game['name']; ?></h2>
         <p><?php echo $game['description']; ?></p>
         <a href="<?php echo $game['link']; ?>">Play Now</a>
+        <!-- Add the new Edit and Delete links -->
+        <a href="./formulaires/edit_games.php?id=<?php echo $game['id']; ?>">Edit</a>
+        <a href="./formulaires/delete_game.php?id=<?php echo $game['id']; ?>">Delete</a>
       </div>
     <?php endforeach; ?>
   </div>
+
 
   <?php include_once('footer.php'); ?>
 
@@ -76,7 +80,6 @@ $games = $stmt->fetchAll();
 
 </html>
 
-<!-- Initialize Swiper -->
 <script>
   var swiper = new Swiper(".mySwiper", {
     slidesPerView: 3,
