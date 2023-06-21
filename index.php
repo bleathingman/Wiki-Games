@@ -40,14 +40,14 @@ $total_games = $pdo->query("SELECT COUNT(*) FROM games")->fetchColumn();
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <title>Wiki Games</title>
 </head>
 
 <body>
-  <!--Header-->
-  <?php include_once('header.php'); ?>
-
+  <header>
+    <!--Header-->
+    <?php include_once('header.php'); ?>
+  </header>
   <div class="games-grid">
     <?php foreach ($games as $game) : ?>
       <div class="game-card">
@@ -86,7 +86,6 @@ $total_games = $pdo->query("SELECT COUNT(*) FROM games")->fetchColumn();
     <?php for ($page = 1; $page <= ceil($total_games / $games_per_page); $page++) : ?>
       <a href="?page=<?php echo $page; ?>"><?php echo $page; ?></a>
     <?php endfor; ?>
-  </div>
   </div>
 
 </body>

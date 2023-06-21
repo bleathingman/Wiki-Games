@@ -112,12 +112,8 @@ input[type=submit]:hover {
 
 /** Formulaire d'ajout de jeu */
 
-.title {
-
-}
-
 .title-add-game {
-    color: #2c77bd;
+    color: #66c0f4;
     text-align: center;
     margin: 50px 0;
 }

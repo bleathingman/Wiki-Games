@@ -11,8 +11,10 @@
 </head>
 
 <body class="erreur">
-    <!--Header-->
-    <?php include_once('header.php'); ?>
+    <header>
+        <!--Header-->
+        <?php include_once('header.php'); ?>
+    </header>
     <div class="container">
         <!--Erreur 404-->
         <h2>Oups! Page non trouvée.</h2>
