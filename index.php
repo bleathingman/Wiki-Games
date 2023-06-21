@@ -9,13 +9,27 @@ if (isset($_SESSION['message'])) {
 // Include database connection
 include_once('./db_connect.php');
 
-// Query to get all games
-$query = "SELECT * FROM games";
+// Define the number of games per page
+$games_per_page = 12;
+
+// Determine the current page number
+$current_page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+
+// Calculate the offset for the query
+$offset = ($current_page - 1) * $games_per_page;
+
+// Prepare the SQL query
+$query = "SELECT * FROM games LIMIT :offset, :games_per_page";
 
 $stmt = $pdo->prepare($query);
+$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+$stmt->bindValue(':games_per_page', $games_per_page, PDO::PARAM_INT);
 $stmt->execute();
 
 $games = $stmt->fetchAll();
+
+// Get the total number of games
+$total_games = $pdo->query("SELECT COUNT(*) FROM games")->fetchColumn();
 
 ?>
 
@@ -26,29 +40,13 @@ $games = $stmt->fetchAll();
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <title>Wiki Games</title>
 </head>
 
 <body>
   <!--Header-->
   <?php include_once('header.php'); ?>
-
-  <!-- Swiper -->
-  <div class="swiper mySwiper">
-    <div class="swiper-wrapper">
-      <?php foreach ($games as $game) : ?>
-        <div class="swiper-slide">
-          <a href="<?php echo $game['link']; ?>"><img src="./images/<?php echo $game['image']; ?>" alt="<?php echo $game['name']; ?>"></a>
-        </div>
-      <?php endforeach; ?>
-    </div>
-    <div class="swiper-button-next"></div>
-    <div class="swiper-button-prev"></div>
-    <div class="swiper-pagination"></div>
-  </div>
-
-
-  <a class="btn btn-primary btn-lg" href="404.php" role="button">Go to 404</a>
 
   <div class="games-grid">
     <?php foreach ($games as $game) : ?>
@@ -69,16 +67,32 @@ $games = $stmt->fetchAll();
         <div class="action-btn">
           <!-- Add the new Edit and Delete links -->
           <a href="./formulaires/edit_games.php?id=<?php echo $game['id']; ?>">Modifier</a>
-          <a href="./formulaires/delete_game.php?id=<?php echo $game['id']; ?>">Supprimer</a>
+          <a href="javascript:void(0);" onclick="confirmDelete('./formulaires/delete_game.php?id=<?php echo $game['id']; ?>', 
+          '<?php echo $game['name']; ?>')">Supprimer</a>
         </div>
       </div>
     <?php endforeach; ?>
+    <!-- Add Game Card -->
+    <div class="game-card">
+      <a href="./formulaires/add_games.php">
+        <img src="./images/add-icon.png" alt="Add Game">
+        <h2 class="add-games">Ajouter un jeu</h2>
+      </a>
+    </div>
   </div>
 
-
-  <?php include_once('footer.php'); ?>
+  <!-- Pagination -->
+  <div class="pagination">
+    <?php for ($page = 1; $page <= ceil($total_games / $games_per_page); $page++) : ?>
+      <a href="?page=<?php echo $page; ?>"><?php echo $page; ?></a>
+    <?php endfor; ?>
+  </div>
+  </div>
 
 </body>
+<footer>
+  <?php include_once('footer.php'); ?>
+</footer>
 
 </html>
 
@@ -98,4 +112,19 @@ $games = $stmt->fetchAll();
       prevEl: ".swiper-button-prev",
     },
   });
+
+  function confirmDelete(deleteUrl, gameName) {
+    Swal.fire({
+      title: 'Êtes-vous sûr de vouloir supprimer ' + gameName + '?',
+      text: "Vous ne pourrez pas revenir en arrière!",
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Oui, supprimez-le!'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        window.location.href = deleteUrl;
+      }
+    })
+  }
 </script>

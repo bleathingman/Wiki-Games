@@ -15,6 +15,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Sanitize and prepare data
     $name = htmlspecialchars(strip_tags($_POST['name']));
     $price = htmlspecialchars(strip_tags($_POST['price']));
+    $description = htmlspecialchars(strip_tags($_POST['description']));
     $link = htmlspecialchars(strip_tags($_POST['link']));
 
     // Handle file upload
@@ -23,7 +24,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     move_uploaded_file($_FILES["image"]["tmp_name"], $target_file);
 
     // Insert into database
-    $query = "INSERT INTO games (name, price, image, link) VALUES (:name, :price, :image, :link)";
+    $query = "INSERT INTO games (name, price, image, description, link) VALUES (:name, :price, :image, :description, :link)";
 
     $stmt = $pdo->prepare($query);
 
@@ -31,6 +32,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->bindParam(':name', $name);
     $stmt->bindParam(':price', $price);
     $stmt->bindParam(':image', $target_file);
+    $stmt->bindParam(':description', $description);
     $stmt->bindParam(':link', $link);
 
     // execute the query

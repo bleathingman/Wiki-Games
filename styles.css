@@ -5,8 +5,17 @@
     padding: 0;
 }
  
-body {
+html body {
+    margin:0;
+    padding:0;
+    height:100%;
     background-color: #1B2739 !important;
+}
+
+.footer {
+    width: 100%;
+    position: absolute;
+    bottom:0;
 }
 
 p {
@@ -57,13 +66,111 @@ p {
     color: rgb(209, 209, 209);
 }
 
+/** Formulaire */
+
+form {
+    display: flex;
+    flex-direction: column;
+    /* width: 30%; */
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0px 0px 15px -5px rgba(0,0,0,0.3);
+}
+
+label {
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+    color: #333;
+}
+
+input[type=text], textarea {
+    margin-bottom: 20px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+input[type=file] {
+    margin-bottom: 20px;
+}
+
+input[type=submit] {
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #6c757d;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+input[type=submit]:hover {
+    background-color: #435869;
+}
+
+/** Formulaire d'ajout de jeu */
+
+.title {
+
+}
+
+.title-add-game {
+    color: #2c77bd;
+    text-align: center;
+    margin: 50px 0;
+}
+
+.form-container {
+    width: 50%;
+    margin: 0 auto;
+}
+
+.form-field {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.form-field label {
+    flex: 1;
+}
+
+.form-field input[type="text"],
+.form-field input[type="file"] {
+    flex: 2;
+    padding: 5px;
+}
+
+.submit-button {
+    text-align: right;
+}
+
+.submit-button input[type="button"] {
+    cursor: pointer;
+    padding: 10px 20px;
+    border-radius: 5px;
+    background-color: #3085d6;
+    border: none;
+    color: #fff;
+}
+
+.submit-button input[type="button"]:hover {
+    background-color: #2c77bd;
+}
+
 /** Slider */
+
+.swiper {
+    max-height: 250px;
+}
 
 .swiper-slide img {
     max-width: 100%;  /* limit the width of the image to the width of its parent element */
     height: auto;  /* set the height automatically based on the width to keep aspect ratio */
 }
-
 
 /** List Game */
 
@@ -118,4 +225,15 @@ body {
 .game-card a:hover {
     background: #82c8e6;
     color: #000;
+}
+
+.game-card .add-games {
+    text-align: center;
+    color: #000;
+}
+
+.pagination {
+    justify-content: center;
+    position: relative;
+    margin: 0 auto;
 }
