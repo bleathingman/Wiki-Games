@@ -7,11 +7,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add a Game</title>
     <link rel="stylesheet" href="../styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 </head>
 
 <body>
-    <?php include_once('../header.php'); ?>
+    <?php include_once('./header.php'); ?>
     <?php
     session_start();
     if (isset($_SESSION['message'])) {
@@ -23,7 +22,7 @@
     <h1 class="title-add-game">Add a Game</h1>
 
     <div class="form-container">
-        <form id="addGameForm" action="../process/add_game_process.php" method="post" enctype="multipart/form-data">
+        <form id="addGameForm" action="./process/add_game_process.php" method="post" enctype="multipart/form-data">
             <div class="form-field">
                 <label for="name">Game Name :</label>
                 <input type="text" id="name" name="name" required>
@@ -72,7 +71,9 @@
             })
         });
     </script>
-    <?php include_once('../footer.php'); ?>
+    <footer>
+        <?php include_once('./footer.php'); ?>
+    </footer>
 </body>
 
 </html>

@@ -55,8 +55,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 
     // Redirect back to the games page
-    header('Location: ../');
+    header('Location: /wiki-games/index.php');
 } else {
     // Redirect to the add game page if the form was not submitted
-    header('Location: ../formUlAires/add_game.php');
+    header('Location: wiki-games/formulaires/add_game.php');
 }

@@ -39,7 +39,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($stmt->execute()) {
         $_SESSION['message'] = "Game was added successfully!";
         $_SESSION['message_type'] = "success";
-        header("Location: ../");
+        header("Location: index.php");
     } else {
         $_SESSION['message'] = "There was an error adding the game.";
         $_SESSION['message_type'] = "alert";

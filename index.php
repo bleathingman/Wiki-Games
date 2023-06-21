@@ -48,50 +48,66 @@ $total_games = $pdo->query("SELECT COUNT(*) FROM games")->fetchColumn();
     <!--Header-->
     <?php include_once('header.php'); ?>
   </header>
-  <div class="games-grid">
-    <?php foreach ($games as $game) : ?>
-      <div class="game-card">
-        <img src="./images/<?php echo $game['image']; ?>" alt="<?php echo $game['name']; ?>">
-        <h2><?php echo $game['name']; ?></h2>
-        <p class="price">
-          <!-- Conditional price display -->
-          <?php
-          if ($game['price'] == 0) {
-            echo 'Gratuit';
-          } else {
-            echo $game['price'] . ' €';
-          }
-          ?>
-        </p>
-        <a target="_blank" href="<?php echo $game['link']; ?>">En savoir plus</a>
-        <div class="action-btn">
-          <!-- Add the new Edit and Delete links -->
-          <a href="./formulaires/edit_games.php?id=<?php echo $game['id']; ?>">Modifier</a>
-          <a href="javascript:void(0);" onclick="confirmDelete('./formulaires/delete_game.php?id=<?php echo $game['id']; ?>', 
-          '<?php echo $game['name']; ?>')">Supprimer</a>
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-md-2">
+        <!-- Tags go here -->
+        <h5>Tags</h5>
+        <ul class="list-tags">
+          <!-- you will replace this with your PHP code to dynamically generate the list -->
+          <li class="list-tags-item">Tag 1</li>
+          <li class="list-tags-item">Tag 2</li>
+          <li class="list-tags-item">Tag 3</li>
+          <!-- end of list -->
+        </ul>
+      </div>
+      <div class="col-md-9">
+        <div class="games-grid">
+          <?php foreach ($games as $game) : ?>
+            <div class="game-card">
+              <img src="./images/<?php echo $game['image']; ?>" alt="<?php echo $game['name']; ?>">
+              <h2><?php echo $game['name']; ?></h2>
+              <p class="price">
+                <!-- Conditional price display -->
+                <?php
+                if ($game['price'] == 0) {
+                  echo 'Gratuit';
+                } else {
+                  echo $game['price'] . ' €';
+                }
+                ?>
+              </p>
+              <a target="_blank" href="<?php echo $game['link']; ?>">En savoir plus</a>
+              <div class="action-btn">
+                <!-- Add the new Edit and Delete links -->
+                <a href="./formulaires/edit_games.php?id=<?php echo $game['id']; ?>">Modifier</a>
+                <a href="javascript:void(0);" onclick="confirmDelete('./formulaires/delete_game.php?id=<?php echo $game['id']; ?>', 
+                '<?php echo $game['name']; ?>')">Supprimer</a>
+              </div>
+            </div>
+          <?php endforeach; ?>
+
+          <!-- Add Game Card -->
+          <div class="game-card">
+            <a href="add_games">
+              <img src="./images/add-icon.png" alt="Add Game">
+              <h2 class="add-games">Ajouter un jeu</h2>
+            </a>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+          <?php for ($page = 1; $page <= ceil($total_games / $games_per_page); $page++) : ?>
+            <a href="?page=<?php echo $page; ?>"><?php echo $page; ?></a>
+          <?php endfor; ?>
         </div>
       </div>
-    <?php endforeach; ?>
-    <!-- Add Game Card -->
-    <div class="game-card">
-      <a href="./formulaires/add_games.php">
-        <img src="./images/add-icon.png" alt="Add Game">
-        <h2 class="add-games">Ajouter un jeu</h2>
-      </a>
     </div>
   </div>
-
-  <!-- Pagination -->
-  <div class="pagination">
-    <?php for ($page = 1; $page <= ceil($total_games / $games_per_page); $page++) : ?>
-      <a href="?page=<?php echo $page; ?>"><?php echo $page; ?></a>
-    <?php endfor; ?>
-  </div>
-
 </body>
-<footer>
-  <?php include_once('footer.php'); ?>
-</footer>
+
 
 </html>
 

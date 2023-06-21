@@ -2,7 +2,6 @@
 
 $request = $_SERVER['REQUEST_URI'];
 
-// Remove subdirectory if used, adjust accordingly
 $request = str_replace('/wiki-games', '', $request);
 
 switch ($request) {
@@ -17,6 +16,18 @@ switch ($request) {
         break;
     case '/options':
         require __DIR__ . '/pages/page_options.php';
+        break;
+    case '/add_games':
+        require __DIR__ . '/formulaires/add_games.php';
+        break;
+    case '/admin':
+        require __DIR__ . '/admin/index.php';
+        break;
+    case '/admin/login':
+        require __DIR__ . '/formulaires/login.php';
+        break;
+    case '/admin/register':
+        require __DIR__ . '/formulaires/register.php';
         break;
     default:
         http_response_code(404);

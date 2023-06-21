@@ -21,5 +21,15 @@
             <li><a href="add_game.php">Ajouter une catégorie</a></li>
             <!-- Add more links as needed -->
         </ul>
+        <!-- User info dropdown -->
+        <div class="dropdown">
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-person-fill"></i>User
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
+                <li><a class="dropdown-item" href="#">Infos Utilisateur</a></li>
+                <li><a class="dropdown-item" href="#">Deconnexion</a></li>
+            </ul>
+        </div>
     </nav>
 </header>

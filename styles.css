@@ -9,7 +9,9 @@ html body {
     margin:0;
     padding:0;
     height:100%;
-    background-color: #1B2739 !important;
+    /* background-color: #002E3D !important; */
+    background: rgb(0,46,61);
+    background: linear-gradient(0deg, rgba(0,46,61,1) 0%, rgba(0,52,89,1) 100%);
 }
 
 .footer {
@@ -19,7 +21,7 @@ html body {
 }
 
 p {
-    color: #c7d5e0;
+    color: #FFFFFF;
 }
 
 .erreur {
@@ -27,7 +29,7 @@ p {
     padding: 0;
     font-family: Montserrat, sans-serif;
     min-height: 100vh;
-    background-image: linear-gradient(125deg, #d1d8e0, #a5b1c2);
+    background-image: linear-gradient(125deg, #FFFFFF, #a5b1c2);
 }
 
 .container {
@@ -52,7 +54,7 @@ p {
 .container a {
     text-decoration: none;
     background: #2C3A47;
-    color: #fff;
+    color: #FFFFFF;
     padding: 12px 24px;
     display: inline-block;
     border-radius: 25px;
@@ -73,7 +75,7 @@ form {
     flex-direction: column;
     /* width: 30%; */
     padding: 20px;
-    background-color: #fff;
+    background-color: #FFFFFF;
     border-radius: 10px;
     box-shadow: 0px 0px 15px -5px rgba(0,0,0,0.3);
 }
@@ -101,7 +103,7 @@ input[type=submit] {
     border: none;
     border-radius: 5px;
     background-color: #6c757d;
-    color: #fff;
+    color: #FFFFFF;
     cursor: pointer;
     transition: background-color 0.2s ease;
 }
@@ -148,31 +150,21 @@ input[type=submit]:hover {
     cursor: pointer;
     padding: 10px 20px;
     border-radius: 5px;
-    background-color: #3085d6;
+    background-color: #007EA7;
     border: none;
-    color: #fff;
+    color: #FFFFFF;
 }
 
 .submit-button input[type="button"]:hover {
     background-color: #2c77bd;
 }
 
-/** Slider */
-
-.swiper {
-    max-height: 250px;
-}
-
-.swiper-slide img {
-    max-width: 100%;  /* limit the width of the image to the width of its parent element */
-    height: auto;  /* set the height automatically based on the width to keep aspect ratio */
-}
 
 /** List Game */
 
 body {
     font-family: Arial, sans-serif;
-    background: #1B2739; /* dark background color like Steam's */
+    background: #002E3D; /* dark background color like Steam's */
     color: #c6d4df; /* light text color */
 }
 
@@ -188,7 +180,7 @@ body {
 .game-card {
     max-height: 410px;
     overflow: hidden;
-    background: #16202d; /* slightly lighter than the page background */
+    background: #002E3D; /* slightly lighter than the page background */
     border-radius: 4px;
     padding: 1rem;
     transition: all .3s ease;
@@ -209,8 +201,8 @@ body {
 
 .game-card a {
     display: inline-block;
-    background: #66c0f4; /* blue background for links */
-    color: #000; /* dark text on light background */
+    background: #007EA7; /* blue background for links */
+    color: #FFFFFF; /* dark text on light background */
     text-decoration: none;
     padding: .5rem 1rem;
     margin-top: 1rem;
@@ -220,16 +212,37 @@ body {
 
 .game-card a:hover {
     background: #82c8e6;
-    color: #000;
+    color: #FFFFFF;
 }
 
 .game-card .add-games {
     text-align: center;
-    color: #000;
+    color: #FFFFFF;
 }
 
 .pagination {
     justify-content: center;
     position: relative;
     margin: 0 auto;
+}
+
+.list-tags {
+    display: flex;
+    flex-direction: column;
+    padding-left: 0;
+    border-radius: 0.25rem;
+}
+
+.list-tags-item {
+    position: relative;
+    display: block;
+    padding: 0.5rem 1rem;
+    color: #6c757d;
+    text-decoration: none;
+}
+
+.col-md-2 {
+    margin-top: 1.5em;
+    margin-left: 1.5em;
+
 }

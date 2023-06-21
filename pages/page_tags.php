@@ -22,14 +22,11 @@ include_once('./db_connect.php');
 </head>
 
 <body>
-    <!--Header-->
-    <?php include_once('../header.php'); ?>
     <header>
+        <!--Header-->
+        <?php include_once('./header.php'); ?>
     </header>
 
-    <footer>
-        <?php include_once('../footer.php'); ?>
-    </footer>
 </body>
 
 </html>
