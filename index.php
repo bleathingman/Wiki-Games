@@ -1,6 +1,11 @@
 <?php
 session_start();
 
+if (!isset($_SESSION['user_id'])) {
+  header('Location: /wiki-games/login');
+  exit();
+}
+
 if (isset($_SESSION['message'])) {
   echo '<div class="message ' . $_SESSION['message_type'] . '">' . $_SESSION['message'] . '</div>';
   unset($_SESSION['message'], $_SESSION['message_type']);
@@ -56,9 +61,9 @@ $total_games = $pdo->query("SELECT COUNT(*) FROM games")->fetchColumn();
         <h5>Tags</h5>
         <ul class="list-tags">
           <!-- you will replace this with your PHP code to dynamically generate the list -->
-          <li class="list-tags-item">Tag 1</li>
-          <li class="list-tags-item">Tag 2</li>
-          <li class="list-tags-item">Tag 3</li>
+          <li class="list-tags-item"><a>Tag 1</a></li>
+          <li class="list-tags-item"><a>Tag 1</a></li>
+          <li class="list-tags-item"><a>Tag 1</a></li>
           <!-- end of list -->
         </ul>
       </div>
