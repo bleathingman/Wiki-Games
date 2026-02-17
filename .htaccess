@@ -1,0 +1,26 @@
+Options -Indexes
+ServerSignature Off
+
+# Protect .env file
+<Files ".env">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Custom 404
+ErrorDocument 404 /wiki-games/404.php
+
+# PHP process security
+<FilesMatch "^(delete_|add_|edit_)">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Prevent direct access to process folder
+RewriteEngine On
+RewriteRule ^process/ - [F,L]
+
+# Force trailing slash redirect (optional)
+# RewriteCond %{REQUEST_FILENAME} !-d
+# RewriteCond %{REQUEST_URI} !/$
+# RewriteRule ^(.*)$ /$1/ [R=301,L]
