@@ -28,6 +28,8 @@ $vals   = [
     'price'        => $game['price'],
     'image'        => $game['image'] ?? '',
     'game_url'     => $game['game_url'] ?? '',
+    'video_url'    => $game['video_url'] ?? '',
+    'extra_images' => $game['extra_images'] ?? '',
     'release_year' => $game['release_year'] ?? '',
     'rating'       => $game['rating'] ?? '',
 ];
@@ -42,6 +44,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $vals['price']        = sanitizeFloat($_POST['price'] ?? '0');
     $vals['image']        = sanitize($_POST['image_url'] ?? '');
     $vals['game_url']     = sanitizeUrl($_POST['game_url'] ?? '');
+    $vals['video_url']    = sanitizeUrl($_POST['video_url'] ?? '');
+    $vals['extra_images'] = sanitize($_POST['extra_images'] ?? '');
     $vals['release_year'] = sanitizeInt($_POST['release_year'] ?? '');
     $vals['rating']       = (float) min(10, max(0, sanitizeFloat($_POST['rating'] ?? '0')));
 
@@ -68,6 +72,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 price = :price,
                 image = :image,
                 game_url = :url,
+                video_url = :video,
+                extra_images = :extras,
                 release_year = :year,
                 rating = :rating
             WHERE id = :id
@@ -80,6 +86,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ':price'    => $vals['price'],
             ':image'    => $img,
             ':url'      => $vals['game_url'] ?: null,
+            ':video'    => $vals['video_url'] ?: null,
+            ':extras'   => $vals['extra_images'] ?: null,
             ':year'     => $vals['release_year'] ?: null,
             ':rating'   => $vals['rating'] ?: null,
             ':id'       => $id,
@@ -165,6 +173,13 @@ include dirname(__DIR__) . '/includes/header.php';
                 </div>
             </div>
 
+            <div class="form-group">
+                <label class="form-label" for="video_url">URL Vidéo / Trailer YouTube</label>
+                <input type="url" id="video_url" name="video_url" class="form-input"
+                    value="<?= sanitize($vals['video_url']) ?>" placeholder="https://www.youtube.com/watch?v=...">
+                <p class="form-hint">Collez l'URL YouTube du trailer.</p>
+            </div>
+
             <p class="form-section-title">Image</p>
 
             <?php if ($vals['image']): ?>
@@ -190,6 +205,13 @@ include dirname(__DIR__) . '/includes/header.php';
                 <input type="url" id="image_url" name="image_url" class="form-input"
                     value="<?= sanitize(str_starts_with($vals['image'], 'http') ? $vals['image'] : '') ?>"
                     placeholder="https://...">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="extra_images">Images supplémentaires (galerie)</label>
+                <textarea id="extra_images" name="extra_images" class="form-input" rows="3"
+                    placeholder="https://url1.jpg|https://url2.jpg|https://url3.jpg"><?= sanitize($vals['extra_images']) ?></textarea>
+                <p class="form-hint">URLs séparées par <strong>|</strong> — ex: <code>https://img1.jpg|https://img2.jpg</code></p>
             </div>
 
             <div style="display:flex;gap:1rem;margin-top:1.5rem;justify-content:flex-end">
