@@ -115,6 +115,45 @@ h4, h5, h6, button, label, .nav-link, .btn-neon, .btn-ghost { font-family: var(-
 .logo-bracket { color: var(--text-muted); }
 .logo-accent  { color: var(--neon-cyan); text-shadow: 0 0 12px var(--neon-cyan); }
 
+.logo-img {
+  height: 80px;
+  width: auto;
+  /* Retire le fond blanc - le logo violet ressort sur le dark */
+  mix-blend-mode: screen;
+  filter: drop-shadow(0 0 8px rgba(183, 110, 255, 0.5));
+  transition: filter var(--transition);
+}
+.logo:hover .logo-img {
+  filter: drop-shadow(0 0 14px rgba(183, 110, 255, 0.85));
+}
+.logo-text {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+/* Auth pages */
+.auth-logo-img {
+  display: block;
+  margin: 0 auto 1.5rem;
+  height: 70px;
+  width: auto;
+  mix-blend-mode: screen;
+  filter: drop-shadow(0 0 12px rgba(183, 110, 255, 0.6));
+}
+
+/* Footer logo */
+.footer-logo-img {
+  display: block;
+  margin: 0 auto 0.5rem;
+  height: 40px;
+  width: auto;
+  mix-blend-mode: screen;
+  opacity: 0.7;
+  filter: drop-shadow(0 0 6px rgba(183, 110, 255, 0.4));
+}
+
 .main-nav {
   display: flex;
   gap: 0.5rem;

@@ -16,6 +16,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?= APP_URL ?>/assets/style.css">
+    <link rel="icon" type="image/svg+xml" href="<?= APP_URL ?>/assets/favicon.svg">
 </head>
 <body>
 
@@ -28,9 +29,8 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 <header class="site-header">
     <div class="header-inner">
         <a href="<?= APP_URL ?>/index.php" class="logo">
-            <span class="logo-bracket">[</span>
-            WIKI<span class="logo-accent">GAMES</span>
-            <span class="logo-bracket">]</span>
+            <img src="<?= APP_URL ?>/assets/logo.png" alt="WG" class="logo-img">
+            <!--<span class="logo-text">WIKI<span class="logo-accent">GAMES</span></span>-->
         </a>
 
         <nav class="main-nav">
