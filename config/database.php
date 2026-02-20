@@ -17,10 +17,10 @@ function getDB(): PDO {
     static $pdo = null;
     if ($pdo !== null) return $pdo;
 
-    $host = $_ENV['DB_HOST'] ?? 'localhost';
+    $host = $_ENV['DB_HOST'] ?? 'mysql.railway.internal';
     $name = $_ENV['DB_NAME'] ?? 'wiki_games';
     $user = $_ENV['DB_USER'] ?? 'root';
-    $pass = $_ENV['DB_PASS'] ?? '';
+    $pass = $_ENV['DB_PASS'] ?? 'iLjpaPOlQbMmSascFBWdRlpKwSwflORl';
 
     try {
         $pdo = new PDO(
