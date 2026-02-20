@@ -67,7 +67,7 @@ function buildQuery(array $extra): string {
         <span class="glitch" data-text="CATALOGUE">CATALOGUE</span>
         <span> DE JEUX</span>
     </h1>
-    <p class="page-subtitle"><?= $total ?> jeu<?= $total !== 1 ? 's' : '' ?> répertorié<?= $total !== 1 ? 's' : '' ?></p>
+    <p class="page-subtitle"><?= $total ?> jeu<?= $total !== 1 ? 'x' : '' ?> répertorié<?= $total !== 1 ? 's' : '' ?></p>
 </div>
 
 <div class="search-bar-wrapper">
