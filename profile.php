@@ -66,6 +66,15 @@ $isOwnProfile  = isLoggedIn() && $_SESSION['user_id'] == $profileUser['id'];
 
 $inventoryValue   = $profileUser['inventory_value'] ?? null;
 $inventoryDetails = !empty($profileUser['inventory_details']) ? json_decode($profileUser['inventory_details'], true) : null;
+
+// Trie : Steam en premier, puis les autres par valeur décroissante
+if ($inventoryDetails) {
+    uksort($inventoryDetails, function($a, $b) use ($inventoryDetails) {
+        if (str_starts_with($a, 'Steam')) return -1;
+        if (str_starts_with($b, 'Steam')) return 1;
+        return $inventoryDetails[$b]['total'] <=> $inventoryDetails[$a]['total'];
+    });
+}
 $inventoryUpdated = $profileUser['inventory_updated_at'] ?? null;
 
 $pageTitle = $profileUser['username'] . ' — Profil';
@@ -144,7 +153,7 @@ $pageTitle = $profileUser['username'] . ' — Profil';
 
                 <?php if ($inventoryValue !== null && $inventoryUpdated): ?>
                 <div class="inventory-total-wrap">
-                    <div class="inventory-total-label">Valeur estimée totale (CS2 + TF2 + Dota 2)</div>
+                    <div class="inventory-total-label">Valeur estimée totale de tous les inventaires</div>
                     <div class="inventory-total-value">≈ <?= number_format((float)$inventoryValue, 2) ?> €</div>
                     <div class="inventory-updated">
                         Dernière mise à jour : <?= date('d/m/Y à H:i', strtotime($inventoryUpdated)) ?>
@@ -161,6 +170,8 @@ $pageTitle = $profileUser['username'] . ' — Profil';
                         <div class="inv-game-header">
                             <?php if (!empty($gameData['appid']) && !empty($gameData['icon'])): ?>
                                 <img src="https://media.steampowered.com/steamcommunity/public/images/apps/<?= $gameData['appid'] ?>/<?= $gameData['icon'] ?>.jpg" class="inv-game-img" onerror="this.style.display='none'">
+                            <?php elseif (!empty($gameData['steam_icon'])): ?>
+                                <span class="inv-game-icon"><?= $gameData['steam_icon'] ?></span>
                             <?php else: ?>
                                 <span class="inv-game-icon">🎮</span>
                             <?php endif; ?>

@@ -89,33 +89,46 @@ function getOwnedGames(string $steamId): array {
 
 function fetchInventoryFull(string $steamId, int $appId): array {
     global $debug;
-    $allAssets   = [];
-    $allDesc     = [];
-    $lastAssetId = null;
-    $page        = 0;
 
-    do {
-        $url = "https://steamcommunity.com/inventory/{$steamId}/{$appId}/2?l=english&count=75";
-        if ($lastAssetId) $url .= "&start_assetid={$lastAssetId}";
+    // Tente les contextids les plus courants
+    $contextIds = [2, 1, 6];
 
-        $data = steamCurl($url);
-        if (!$data || empty($data['assets'])) break;
+    foreach ($contextIds as $contextId) {
+        $allAssets   = [];
+        $allDesc     = [];
+        $lastAssetId = null;
+        $page        = 0;
 
-        $allAssets = array_merge($allAssets, $data['assets']);
-        foreach ($data['descriptions'] ?? [] as $d) {
-            $allDesc[$d['classid'] . '_' . $d['instanceid']] = $d;
+        do {
+            $url = "https://steamcommunity.com/inventory/{$steamId}/{$appId}/{$contextId}?l=english&count=75";
+            if ($lastAssetId) $url .= "&start_assetid={$lastAssetId}";
+
+            $data = steamCurl($url);
+            if (!$data || empty($data['assets'])) break;
+
+            $allAssets = array_merge($allAssets, $data['assets']);
+            foreach ($data['descriptions'] ?? [] as $d) {
+                $allDesc[$d['classid'] . '_' . $d['instanceid']] = $d;
+            }
+
+            $more        = $data['more_items'] ?? 0;
+            $lastAssetId = $data['last_assetid'] ?? null;
+            $page++;
+
+            if ($debug) echo "  [ctx{$contextId}] Page {$page}: " . count($data['assets']) . " assets | more: {$more}\n";
+            if ($more) sleep(2);
+
+        } while (!empty($data['more_items']) && $lastAssetId && $page < 100);
+
+        if (!empty($allAssets)) {
+            if ($debug) echo "  → contextid {$contextId} fonctionne ({count($allAssets)} assets)\n";
+            return ['assets' => $allAssets, 'descriptions' => $allDesc];
         }
 
-        $more        = $data['more_items'] ?? 0;
-        $lastAssetId = $data['last_assetid'] ?? null;
-        $page++;
+        usleep(500000); // 500ms entre chaque tentative de contextid
+    }
 
-        if ($debug) echo "  Page {$page}: " . count($data['assets']) . " assets | more: {$more}\n";
-        if ($more) sleep(2);
-
-    } while (!empty($data['more_items']) && $lastAssetId && $page < 100);
-
-    return ['assets' => $allAssets, 'descriptions' => $allDesc];
+    return ['assets' => [], 'descriptions' => []];
 }
 
 // ─── Prix du marché ──────────────────────────────────────────────────────────
@@ -140,17 +153,134 @@ function fetchMarketPrice(int $appId, string $marketHashName): float {
 
 // ─── Calcul principal ────────────────────────────────────────────────────────
 
+$results = [];
+$total   = 0.0;
+
+// ── Steam Community Items (cartes, gemmes, emoticons, backgrounds) ─────────
+// appid=753, contextid=6
+if ($debug) echo "=== Steam Community Items (appid 753, ctx 6) ===\n";
+sleep(1);
+$steamInv = [];
+$allSteamAssets = [];
+$allSteamDesc   = [];
+$lastAssetId = null;
+$page = 0;
+do {
+    $url = "https://steamcommunity.com/inventory/{$steamId}/753/6?l=english&count=75";
+    if ($lastAssetId) $url .= "&start_assetid={$lastAssetId}";
+    $data = steamCurl($url);
+    if (!$data || empty($data['assets'])) break;
+    $allSteamAssets = array_merge($allSteamAssets, $data['assets']);
+    foreach ($data['descriptions'] ?? [] as $d) {
+        $allSteamDesc[$d['classid'] . '_' . $d['instanceid']] = $d;
+    }
+    $more        = $data['more_items'] ?? 0;
+    $lastAssetId = $data['last_assetid'] ?? null;
+    $page++;
+    if ($debug) echo "  Page {$page}: " . count($data['assets']) . " assets | more: {$more}\n";
+    if ($more) sleep(2);
+} while (!empty($data['more_items']) && $lastAssetId && $page < 100);
+
+if (!empty($allSteamAssets)) {
+    $itemCounts = [];
+    foreach ($allSteamAssets as $asset) {
+        $key = $asset['classid'] . '_' . $asset['instanceid'];
+        $itemCounts[$key] = ($itemCounts[$key] ?? 0) + 1;
+    }
+    $gameTotal = 0.0; $itemCount = 0; $topItems = [];
+    foreach ($itemCounts as $key => $count) {
+        $desc = $allSteamDesc[$key] ?? null;
+        if (!$desc || empty($desc['marketable'])) continue;
+        $marketHashName = $desc['market_hash_name'] ?? null;
+        if (!$marketHashName) continue;
+        usleep(300000);
+        $unitPrice = fetchMarketPrice(753, $marketHashName);
+        $lineTotal = round($unitPrice * $count, 2);
+        $gameTotal += $lineTotal; $itemCount += $count;
+        if ($unitPrice > 0) {
+            $topItems[] = ['name' => $marketHashName, 'count' => $count, 'unit_price' => round($unitPrice, 2), 'total' => $lineTotal];
+        }
+    }
+    if ($debug) echo "  Items vendables: {$itemCount} | Total: {$gameTotal}€\n\n";
+    if ($gameTotal > 0) {
+        usort($topItems, fn($a, $b) => $b['total'] <=> $a['total']);
+        $results['Steam (Cartes & Items)'] = [
+            'appid'     => 753,
+            'icon'      => '',
+            'steam_icon'=> '🃏',
+            'items'     => $itemCount,
+            'total'     => round($gameTotal, 2),
+            'top_items' => array_slice($topItems, 0, 5),
+        ];
+        $total += $gameTotal;
+    }
+}
+
 // Récupère la liste de tous les jeux possédés
 if ($debug) echo "=== Récupération des jeux possédés ===\n";
 $ownedGames = getOwnedGames($steamId);
 if ($debug) echo count($ownedGames) . " jeux trouvés\n\n";
 
+// Map appid => nom du jeu pour remplacer les prefixes dans les noms d'items Steam
+$gameNameMap = [];
+foreach ($ownedGames as $g) {
+    $gameNameMap[(string)$g['appid']] = $g['name'] ?? null;
+}
+
+// Nettoie les noms d'items Steam Community (ex: "431960-Spiral Galaxy" → "Spiral Galaxy (Wallpaper Engine)")
+if (isset($results['Steam (Cartes & Items)'])) {
+    foreach ($results['Steam (Cartes & Items)']['top_items'] as &$item) {
+        if (preg_match('/^(\d+)-(.+)$/', $item['name'], $m)) {
+            $appid    = $m[1];
+            $itemName = $m[2];
+            $gName    = $gameNameMap[$appid] ?? null;
+            $item['name'] = $gName ? "{$itemName} ({$gName})" : $itemName;
+        }
+    }
+    unset($item);
+}
+
 // Jeux connus pour avoir des inventaires (contextid 2)
 // On essaie d'abord les jeux connus, puis les autres
-$knownInventoryGames = [440, 730, 570, 252490, 304930, 322330, 578080, 433850, 230410, 221100, 346110, 4000, 8930, 255710];
+$knownInventoryGames = [
+    440,    // Team Fortress 2
+    730,    // CS2
+    570,    // Dota 2
+    252490, // Rust
+    304930, // Unturned
+    322330, // Don't Starve Together
+    578080, // PUBG
+    433850, // H1Z1
+    230410, // Warframe
+    221100, // DayZ
+    346110, // ARK
+    4000,   // Garry's Mod
+    8930,   // Civilization V
+    255710, // Cities: Skylines
+    431960, // Wallpaper Engine
+    236390, // War Thunder
+    1172620,// Sea of Thieves
+    548430, // Deep Rock Galactic
+    881100, // Golf With Your Friends (appid réel)
+    431240, // Golf With Your Friends
+    1091500,// Cyberpunk 2077
+    730,    // CS:GO/CS2
+    945360, // Among Us
+    1182900,// Banana
+    1097150,// Fall Guys
+    1599340,// Lost Ark
+    271590, // GTA V
+    252950, // Rocket League
+    1222730,// Longvinter
+    1604030,// V Rising
+    1085660,// Destiny 2
+    39210,  // Final Fantasy XIV
+    374320, // Dark Souls III
+    1203220,// Raft
+    945360, // Among Us
+    1290080,// Business Tour
+];
 
-$results = [];
-$total   = 0.0;
 $checked = 0;
 
 foreach ($ownedGames as $game) {
