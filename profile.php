@@ -159,7 +159,11 @@ $pageTitle = $profileUser['username'] . ' — Profil';
                     <?php foreach ($inventoryDetails as $gameName => $gameData): ?>
                     <div class="inventory-game-card">
                         <div class="inv-game-header">
-                            <span class="inv-game-icon"><?= $gameData['icon'] ?></span>
+                            <?php if (!empty($gameData['appid']) && !empty($gameData['icon'])): ?>
+                                <img src="https://media.steampowered.com/steamcommunity/public/images/apps/<?= $gameData['appid'] ?>/<?= $gameData['icon'] ?>.jpg" class="inv-game-img" onerror="this.style.display='none'">
+                            <?php else: ?>
+                                <span class="inv-game-icon">🎮</span>
+                            <?php endif; ?>
                             <span class="inv-game-name"><?= sanitize($gameName) ?></span>
                             <span class="inv-game-total"><?= number_format($gameData['total'], 2) ?> €</span>
                         </div>

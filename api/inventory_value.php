@@ -1,6 +1,6 @@
 <?php
 // api/inventory_value.php
-set_time_limit(300);
+set_time_limit(600); // 10 minutes max
 
 require_once dirname(__DIR__) . '/config/config.php';
 require_once dirname(__DIR__) . '/config/database.php';
@@ -11,23 +11,12 @@ header('Content-Type: application/json');
 define('STEAM_API_KEY', 'F623F5D1BDD4666094D118E33CEA2ED2');
 define('CACHE_HOURS', 24);
 
-const SUPPORTED_GAMES = [
-    730 => ['name' => 'CS2',    'icon' => '🔫', 'context' => 2],
-    440 => ['name' => 'TF2',    'icon' => '🎩', 'context' => 2],
-    570 => ['name' => 'Dota 2', 'icon' => '⚔️', 'context' => 2],
-];
-
 $steamId = $_GET['steam_id'] ?? null;
 $debug   = !empty($_GET['debug']);
+$force   = !empty($_GET['force']);
 
 if (!$steamId) { echo json_encode(['error' => 'Steam ID requis']); exit; }
-
-if ($debug) {
-    header('Content-Type: text/plain');
-    echo "=== DEBUG INVENTORY API ===\n";
-    echo "SteamID: $steamId\n";
-    echo "Force: " . (!empty($_GET['force']) ? 'oui' : 'non') . "\n\n";
-}
+if ($debug) { header('Content-Type: text/plain'); echo "=== DEBUG INVENTORY API ===\nSteamID: $steamId\n\n"; }
 
 $db = getDB();
 
@@ -36,32 +25,24 @@ $stmt = $db->prepare('SELECT inventory_value, inventory_details, inventory_updat
 $stmt->execute([':steam_id' => $steamId]);
 $user = $stmt->fetch();
 
-if ($debug) echo "Cache DB: value=" . ($user['inventory_value'] ?? 'null') . " updated=" . ($user['inventory_updated_at'] ?? 'null') . "\n\n";
+if ($debug) echo "Cache: value=" . ($user['inventory_value'] ?? 'null') . " updated=" . ($user['inventory_updated_at'] ?? 'null') . "\n\n";
 
 if (
-    !$debug &&
+    !$debug && !$force &&
     $user &&
     $user['inventory_value'] !== null &&
     !empty($user['inventory_updated_at']) &&
-    strtotime($user['inventory_updated_at']) > time() - (CACHE_HOURS * 3600) &&
-    empty($_GET['force'])
+    strtotime($user['inventory_updated_at']) > time() - (CACHE_HOURS * 3600)
 ) {
-    echo json_encode([
-        'cached'  => true,
-        'total'   => (float) $user['inventory_value'],
-        'details' => json_decode($user['inventory_details'], true),
-        'updated' => $user['inventory_updated_at'],
-    ]);
+    echo json_encode(['cached' => true, 'total' => (float) $user['inventory_value'], 'details' => json_decode($user['inventory_details'], true), 'updated' => $user['inventory_updated_at']]);
     exit;
 }
 
-// ─── cURL avec headers navigateur ───────────────────────────────────────────
+// ─── cURL avec retry 429 ─────────────────────────────────────────────────────
 
 function steamCurl(string $url): ?array {
     global $debug;
-
-    $maxRetries = 3;
-    for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+    for ($attempt = 1; $attempt <= 3; $attempt++) {
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -81,49 +62,46 @@ function steamCurl(string $url): ?array {
             ],
         ]);
         $res  = curl_exec($ch);
-        $err  = curl_error($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $err  = curl_error($ch);
         curl_close($ch);
 
-        if ($debug) {
-            echo "  [Tentative $attempt] HTTP $code | " . strlen($res ?: '') . " octets | " . ($err ?: 'OK') . "\n";
-            echo "  Début: " . substr($res ?: 'VIDE', 0, 100) . "\n";
-        }
-
-        // 429 = rate-limit → attend et réessaie
         if ($code === 429) {
-            $wait = $attempt * 10; // 10s, 20s, 30s
-            if ($debug) echo "  Rate-limit 429 → attente {$wait}s...\n";
+            $wait = $attempt * 10;
+            if ($debug) echo "  429 rate-limit → attente {$wait}s\n";
             sleep($wait);
             continue;
         }
-
         if ($err || !$res) return null;
-        $decoded = json_decode($res, true);
-        if ($debug && $decoded === null) echo "  JSON error: " . json_last_error_msg() . "\n";
-        return $decoded;
+        return json_decode($res, true);
     }
-
-    if ($debug) echo "  Échec après $maxRetries tentatives\n";
     return null;
 }
 
-function fetchInventoryFull(string $steamId, int $appId, int $contextId): array {
+// ─── Récupère tous les jeux possédés ─────────────────────────────────────────
+
+function getOwnedGames(string $steamId): array {
+    $data = steamCurl("https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key=" . STEAM_API_KEY . "&steamid={$steamId}&include_appinfo=1");
+    return $data['response']['games'] ?? [];
+}
+
+// ─── Récupère l'inventaire complet avec pagination ───────────────────────────
+
+function fetchInventoryFull(string $steamId, int $appId): array {
     global $debug;
-    $allAssets = [];
-    $allDesc   = [];
+    $allAssets   = [];
+    $allDesc     = [];
     $lastAssetId = null;
-    $page = 0;
+    $page        = 0;
 
     do {
-        $url  = "https://steamcommunity.com/inventory/{$steamId}/{$appId}/{$contextId}?l=english&count=75";
+        $url = "https://steamcommunity.com/inventory/{$steamId}/{$appId}/2?l=english&count=75";
         if ($lastAssetId) $url .= "&start_assetid={$lastAssetId}";
 
         $data = steamCurl($url);
         if (!$data || empty($data['assets'])) break;
 
         $allAssets = array_merge($allAssets, $data['assets']);
-
         foreach ($data['descriptions'] ?? [] as $d) {
             $allDesc[$d['classid'] . '_' . $d['instanceid']] = $d;
         }
@@ -132,14 +110,15 @@ function fetchInventoryFull(string $steamId, int $appId, int $contextId): array 
         $lastAssetId = $data['last_assetid'] ?? null;
         $page++;
 
-        if ($debug) echo "  Page $page: " . count($data['assets']) . " assets | more: $more\n";
+        if ($debug) echo "  Page {$page}: " . count($data['assets']) . " assets | more: {$more}\n";
+        if ($more) sleep(2);
 
-        if ($more) sleep(2); // 2 secondes entre les pages pour éviter le rate-limit
-
-    } while (!empty($data['more_items']) && $lastAssetId && $page < 50);
+    } while (!empty($data['more_items']) && $lastAssetId && $page < 100);
 
     return ['assets' => $allAssets, 'descriptions' => $allDesc];
 }
+
+// ─── Prix du marché ──────────────────────────────────────────────────────────
 
 function fetchMarketPrice(int $appId, string $marketHashName): float {
     $url  = "https://steamcommunity.com/market/priceoverview/?appid={$appId}&currency=3&market_hash_name=" . urlencode($marketHashName);
@@ -159,23 +138,42 @@ function fetchMarketPrice(int $appId, string $marketHashName): float {
     return (float) $cleaned;
 }
 
-// ─── Calcul ──────────────────────────────────────────────────────────────────
+// ─── Calcul principal ────────────────────────────────────────────────────────
+
+// Récupère la liste de tous les jeux possédés
+if ($debug) echo "=== Récupération des jeux possédés ===\n";
+$ownedGames = getOwnedGames($steamId);
+if ($debug) echo count($ownedGames) . " jeux trouvés\n\n";
+
+// Jeux connus pour avoir des inventaires (contextid 2)
+// On essaie d'abord les jeux connus, puis les autres
+$knownInventoryGames = [440, 730, 570, 252490, 304930, 322330, 578080, 433850, 230410, 221100, 346110, 4000, 8930, 255710];
 
 $results = [];
 $total   = 0.0;
+$checked = 0;
 
-foreach (SUPPORTED_GAMES as $appId => $gameInfo) {
-    if ($debug) echo "=== {$gameInfo['name']} (appid $appId) ===\n";
+foreach ($ownedGames as $game) {
+    $appId    = (int) $game['appid'];
+    $gameName = $game['name'] ?? "App {$appId}";
 
-    // Pause entre chaque jeu pour éviter le rate-limit Steam
-    if (!empty($results)) sleep(5);
+    // Saute les jeux sans items market connus
+    // On essaie uniquement les jeux qui ont un workshop/market (heuristique : has_community_visible_stats)
+    // Pour limiter le temps, on ne tente que les jeux connus + ceux avec beaucoup d'heures
+    $playtime = $game['playtime_forever'] ?? 0;
+    $isKnown  = in_array($appId, $knownInventoryGames);
+    $hasTime  = $playtime > 60; // Plus d'1h de jeu
 
-    $inv = fetchInventoryFull($steamId, $appId, $gameInfo['context']);
+    if (!$isKnown && !$hasTime) continue;
 
-    if ($debug) echo "Assets: " . count($inv['assets']) . " | Descriptions: " . count($inv['descriptions']) . "\n";
+    if ($debug) echo "=== {$gameName} (appid {$appId}) ===\n";
+
+    sleep(1); // 1 seconde entre chaque jeu
+
+    $inv = fetchInventoryFull($steamId, $appId);
 
     if (empty($inv['assets'])) {
-        if ($debug) echo "→ Inventaire vide ou inaccessible\n\n";
+        if ($debug) echo "  → Pas d'inventaire\n\n";
         continue;
     }
 
@@ -186,31 +184,25 @@ foreach (SUPPORTED_GAMES as $appId => $gameInfo) {
         $itemCounts[$key] = ($itemCounts[$key] ?? 0) + 1;
     }
 
-    if ($debug) echo "Items uniques: " . count($itemCounts) . "\n";
-
-    $gameTotal     = 0.0;
-    $itemCount     = 0;
-    $topItems      = [];
-    $marketable    = 0;
-    $nonMarketable = 0;
+    $gameTotal  = 0.0;
+    $itemCount  = 0;
+    $topItems   = [];
+    $marketable = 0;
 
     foreach ($itemCounts as $key => $count) {
         $desc = $inv['descriptions'][$key] ?? null;
-        if (!$desc) continue;
-        if (empty($desc['marketable'])) { $nonMarketable++; continue; }
+        if (!$desc || empty($desc['marketable'])) continue;
         $marketable++;
 
         $marketHashName = $desc['market_hash_name'] ?? null;
         if (!$marketHashName) continue;
 
-        usleep(300000);
+        usleep(300000); // 300ms entre chaque prix
 
         $unitPrice  = fetchMarketPrice($appId, $marketHashName);
         $lineTotal  = round($unitPrice * $count, 2);
         $gameTotal += $lineTotal;
         $itemCount += $count;
-
-        if ($debug && $marketable <= 3) echo "  Item: $marketHashName | Prix: {$unitPrice}€ x{$count} = {$lineTotal}€\n";
 
         if ($unitPrice > 0) {
             $topItems[] = [
@@ -222,18 +214,23 @@ foreach (SUPPORTED_GAMES as $appId => $gameInfo) {
         }
     }
 
-    if ($debug) echo "Vendables: $marketable | Non-vendables: $nonMarketable | Total: {$gameTotal}€\n\n";
+    if ($debug) echo "  Vendables: {$marketable} | Total: {$gameTotal}€\n\n";
+
+    // N'ajoute le jeu que s'il a de la valeur
+    if ($gameTotal <= 0) continue;
 
     usort($topItems, fn($a, $b) => $b['total'] <=> $a['total']);
 
-    $results[$gameInfo['name']] = [
-        'icon'      => $gameInfo['icon'],
+    $results[$gameName] = [
+        'appid'     => $appId,
+        'icon'      => $game['img_icon_url'] ?? '',
         'items'     => $itemCount,
         'total'     => round($gameTotal, 2),
         'top_items' => array_slice($topItems, 0, 5),
     ];
 
     $total += $gameTotal;
+    $checked++;
 }
 
 $total = round($total, 2);
@@ -247,4 +244,11 @@ try {
     error_log('Inventory cache error: ' . $e->getMessage());
 }
 
-echo json_encode(['cached' => false, 'total' => $total, 'details' => $results, 'updated' => $now]);
+if (!$debug) {
+    echo json_encode(['cached' => false, 'total' => $total, 'details' => $results, 'updated' => $now]);
+} else {
+    echo "\n=== RÉSULTAT FINAL ===\n";
+    echo "Total: {$total}€\n";
+    echo "Jeux avec valeur: " . count($results) . "\n";
+    echo json_encode(['cached' => false, 'total' => $total, 'details' => $results, 'updated' => $now]);
+}
