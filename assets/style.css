@@ -1700,3 +1700,56 @@ textarea.form-input {
   object-fit: cover;
   flex-shrink: 0;
 }
+
+/* ─── Inventory Progress Log ─────────────────────────────────────────────── */
+.inv-progress-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.inv-progress-info {
+  flex: 1;
+}
+
+.inv-elapsed {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 0.3rem;
+}
+
+.inv-elapsed span {
+  color: var(--neon-cyan);
+  font-weight: 700;
+}
+
+.inv-log {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  max-height: 200px;
+  overflow-y: auto;
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  line-height: 1.8;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+  scroll-behavior: smooth;
+}
+
+.inv-log-line {
+  padding: 0.1rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  transition: color 0.2s;
+}
+
+.inv-log-line.found {
+  color: var(--neon-green);
+  font-weight: 600;
+}
+
+.inv-log::-webkit-scrollbar { width: 4px; }
+.inv-log::-webkit-scrollbar-track { background: transparent; }
+.inv-log::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 2px; }

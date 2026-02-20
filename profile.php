@@ -213,9 +213,15 @@ $pageTitle = $profileUser['username'] . ' — Profil';
                 <?php endif; ?>
 
                 <div class="inventory-loading" id="inv-loading" style="display:none">
-                    <div class="inv-spinner"></div>
-                    <p id="inv-loading-text">Connexion à Steam...</p>
-                    <p class="inventory-notice">Cette opération peut prendre 1 à 2 minutes.<br>Ne ferme pas cette page.</p>
+                    <div class="inv-progress-header">
+                        <div class="inv-spinner"></div>
+                        <div class="inv-progress-info">
+                            <p id="inv-loading-text">Connexion à Steam...</p>
+                            <p class="inv-elapsed">⏱ <span id="inv-elapsed">0s</span> écoulées &nbsp;·&nbsp; Total en cours : <span id="inv-running-total">0.00 €</span></p>
+                        </div>
+                    </div>
+                    <div class="inv-log" id="inv-log"></div>
+                    <p class="inventory-notice">Ne ferme pas cette page pendant le calcul.</p>
                 </div>
 
             </div>
@@ -265,48 +271,68 @@ const STEAM_ID = '<?= $steamId ?>';
 const API_URL  = '<?= APP_URL ?>/api/inventory_value.php';
 
 function calculateInventory(force = false) {
-    const emptyEl   = document.getElementById('inv-empty');
-    const loadingEl = document.getElementById('inv-loading');
-    const btnEl     = document.getElementById('inv-btn');
-    const txtEl     = document.getElementById('inv-loading-text');
+    const emptyEl      = document.getElementById('inv-empty');
+    const loadingEl    = document.getElementById('inv-loading');
+    const btnEl        = document.getElementById('inv-btn');
+    const txtEl        = document.getElementById('inv-loading-text');
+    const elapsedEl    = document.getElementById('inv-elapsed');
+    const runningEl    = document.getElementById('inv-running-total');
+    const logEl        = document.getElementById('inv-log');
 
     if (emptyEl)   emptyEl.style.display   = 'none';
     if (loadingEl) loadingEl.style.display = 'flex';
     if (btnEl)     btnEl.disabled = true;
+    if (logEl)     logEl.innerHTML = '';
 
-    const messages = [
-        'Récupération de l\'inventaire TF2...',
-        'Récupération de l\'inventaire CS2...',
-        'Récupération de l\'inventaire Dota 2...',
-        'Calcul des prix du marché Steam...',
-        'Calcul en cours, encore quelques instants...',
-    ];
-    let i = 0;
-    const interval = setInterval(() => {
-        if (i < messages.length - 1) i++;
-        if (txtEl) txtEl.textContent = messages[i];
-    }, 15000);
+    // Chrono
+    const startTime = Date.now();
+    const chronoInterval = setInterval(() => {
+        const s = Math.floor((Date.now() - startTime) / 1000);
+        const m = Math.floor(s / 60);
+        const ss = s % 60;
+        if (elapsedEl) elapsedEl.textContent = m > 0 ? `${m}m ${ss}s` : `${ss}s`;
+    }, 1000);
 
-    fetch(`${API_URL}?steam_id=${STEAM_ID}${force ? '&force=1' : ''}`)
-        .then(r => r.json())
-        .then(data => {
-            clearInterval(interval);
-            if (data.error) {
-                alert('Erreur : ' + data.error);
-                if (emptyEl)   emptyEl.style.display   = 'flex';
-                if (loadingEl) loadingEl.style.display = 'none';
-                if (btnEl)     btnEl.disabled = false;
-                return;
-            }
-            window.location.reload();
-        })
-        .catch(() => {
-            clearInterval(interval);
-            if (loadingEl) loadingEl.style.display = 'none';
+    const SSE_URL = `<?= APP_URL ?>/api/inventory_progress.php?steam_id=${STEAM_ID}${force ? '&force=1' : ''}`;
+    const es = new EventSource(SSE_URL);
+
+    es.addEventListener('progress', e => {
+        const d = JSON.parse(e.data);
+        if (txtEl) txtEl.textContent = d.step || '';
+        if (runningEl && d.running_total !== undefined) runningEl.textContent = d.running_total.toFixed(2) + ' €';
+
+        // Ajoute dans le log
+        if (logEl && d.step) {
+            const line = document.createElement('div');
+            line.className = 'inv-log-line' + (d.found ? ' found' : '');
+            line.textContent = d.step;
+            logEl.appendChild(line);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+    });
+
+    es.addEventListener('done', e => {
+        es.close();
+        clearInterval(chronoInterval);
+        const d = JSON.parse(e.data);
+        if (d.error) {
+            alert('Erreur : ' + d.error);
             if (emptyEl)   emptyEl.style.display   = 'flex';
+            if (loadingEl) loadingEl.style.display = 'none';
             if (btnEl)     btnEl.disabled = false;
-            alert('Erreur réseau. Réessaie dans quelques instants.');
-        });
+            return;
+        }
+        window.location.reload();
+    });
+
+    es.onerror = () => {
+        es.close();
+        clearInterval(chronoInterval);
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (emptyEl)   emptyEl.style.display   = 'flex';
+        if (btnEl)     btnEl.disabled = false;
+        alert('Erreur réseau. Réessaie dans quelques instants.');
+    };
 }
 </script>
 <?php endif; ?>
