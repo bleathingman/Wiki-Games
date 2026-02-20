@@ -1503,3 +1503,192 @@ textarea.form-input {
   .profile-steam-link { align-self: center; }
   .profile-stats-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ─── Inventory Value ──────────────────────────────────────────────────────── */
+.inventory-card {
+  background: var(--gradient-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  min-height: 160px;
+}
+
+.inventory-total-wrap {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.inventory-total-label {
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.inventory-total-value {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 900;
+  color: var(--neon-green);
+  text-shadow: 0 0 30px rgba(57, 255, 20, 0.3);
+  line-height: 1;
+  margin-bottom: 0.6rem;
+}
+
+.inventory-updated {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.inv-refresh-btn {
+  background: none;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.inv-refresh-btn:hover {
+  border-color: var(--border-glow);
+  color: var(--neon-cyan);
+}
+
+.inventory-games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.inventory-game-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  padding: 1rem;
+  transition: var(--transition);
+}
+.inventory-game-card:hover {
+  border-color: var(--border-glow);
+}
+
+.inv-game-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.inv-game-icon { font-size: 1.1rem; flex-shrink: 0; }
+
+.inv-game-name {
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.inv-game-total {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--neon-green);
+}
+
+.inv-game-items {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.8rem;
+}
+
+.inv-top-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.inv-item-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+
+.inv-item-name {
+  flex: 1;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.inv-item-count {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.inv-item-price {
+  color: var(--neon-green);
+  font-weight: 600;
+  font-family: var(--font-ui);
+  flex-shrink: 0;
+}
+
+/* Empty state inventaire */
+.inventory-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  text-align: center;
+  padding: 1rem 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.inventory-empty-icon { font-size: 2.5rem; }
+
+.inventory-notice {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+/* Loading */
+.inventory-loading {
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  text-align: center;
+  padding: 1rem 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.inv-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border-subtle);
+  border-top-color: var(--neon-cyan);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
