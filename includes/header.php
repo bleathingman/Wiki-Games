@@ -16,25 +16,6 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?= APP_URL ?>/assets/style.css">
     <link rel="icon" type="image/svg+xml" href="<?= APP_URL ?>/assets/favicon.svg">
-    <style>
-        .user-avatar {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 1px solid rgba(103, 193, 245, 0.5);
-            vertical-align: middle;
-            margin-right: 6px;
-        }
-        .user-tag {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .steam-username {
-            color: #67c1f5;
-        }
-    </style>
 </head>
 <body>
 <!-- Scanline overlay -->
@@ -58,7 +39,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         </nav>
         <div class="header-auth">
             <?php if (isLoggedIn()): ?>
-                <span class="user-tag">
+                <a href="<?= APP_URL ?>/profile.php" class="user-tag" style="text-decoration:none">
                     <?php if (!empty($_SESSION['steam_avatar'])): ?>
                         <img src="<?= sanitize($_SESSION['steam_avatar']) ?>" alt="avatar" class="user-avatar">
                         <span class="steam-username"><?= sanitize($_SESSION['username']) ?></span>
@@ -67,7 +48,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                         <?= sanitize($_SESSION['username']) ?>
                     <?php endif; ?>
                     <?php if (isAdmin()): ?><span class="admin-badge">ADMIN</span><?php endif; ?>
-                </span>
+                </a>
                 <a href="<?= APP_URL ?>/logout.php" class="btn-ghost">Déconnexion</a>
             <?php else: ?>
                 <a href="<?= APP_URL ?>/login.php" class="btn-ghost">Connexion</a>
