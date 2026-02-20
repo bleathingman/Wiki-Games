@@ -118,7 +118,6 @@ h4, h5, h6, button, label, .nav-link, .btn-neon, .btn-ghost { font-family: var(-
 .logo-img {
   height: 80px;
   width: auto;
-  /* Retire le fond blanc - le logo violet ressort sur le dark */
   mix-blend-mode: screen;
   filter: drop-shadow(0 0 8px rgba(183, 110, 255, 0.5));
   transition: filter var(--transition);
@@ -199,6 +198,72 @@ h4, h5, h6, button, label, .nav-link, .btn-neon, .btn-ghost { font-family: var(-
   color: #fff;
   padding: 0.1rem 0.4rem;
   border-radius: 3px;
+}
+
+/* ─── Steam Avatar & Username ──────────────────────────────────────────────── */
+.user-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(103, 193, 245, 0.5);
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.steam-username {
+  color: #67c1f5;
+}
+
+/* ─── Steam Login Button ───────────────────────────────────────────────────── */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+  color: rgba(255,255,255,0.3);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255,255,255,0.1);
+}
+
+.btn-steam {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1.25rem;
+  background: linear-gradient(135deg, #1b2838, #2a475e);
+  border: 1px solid #4c6b8a;
+  border-radius: 4px;
+  color: #c7d5e0;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-steam:hover {
+  background: linear-gradient(135deg, #2a475e, #1b2838);
+  border-color: #67c1f5;
+  color: #67c1f5;
+  box-shadow: 0 0 12px rgba(103, 193, 245, 0.2);
+}
+.btn-steam svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+  flex-shrink: 0;
 }
 
 /* ─── Buttons ──────────────────────────────────────────────────────────────── */
@@ -467,9 +532,7 @@ h4, h5, h6, button, label, .nav-link, .btn-neon, .btn-ghost { font-family: var(-
   transition: var(--transition);
   min-width: 140px;
 }
-.filter-select:focus {
-  border-color: var(--border-glow);
-}
+.filter-select:focus { border-color: var(--border-glow); }
 .filter-select option { background: var(--bg-deep); }
 
 /* ─── Games Grid ───────────────────────────────────────────────────────────── */
@@ -615,10 +678,7 @@ h4, h5, h6, button, label, .nav-link, .btn-neon, .btn-ghost { font-family: var(-
   color: #a8ffb0;
 }
 
-.card-actions {
-  display: flex;
-  gap: 0.4rem;
-}
+.card-actions { display: flex; gap: 0.4rem; }
 
 .card-btn {
   font-family: var(--font-ui);
@@ -807,10 +867,7 @@ textarea.form-input {
   font-size: 0.85rem;
   color: var(--text-muted);
 }
-.auth-alt a {
-  color: var(--neon-cyan);
-  font-weight: 600;
-}
+.auth-alt a { color: var(--neon-cyan); font-weight: 600; }
 .auth-alt a:hover { text-decoration: underline; }
 
 /* ─── Admin Dashboard ──────────────────────────────────────────────────────── */
@@ -929,11 +986,7 @@ textarea.form-input {
   box-shadow: var(--shadow-card), var(--shadow-glow);
   aspect-ratio: 3/4;
 }
-.game-cover img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+.game-cover img { width: 100%; height: 100%; object-fit: cover; }
 
 .game-info-panel { display: flex; flex-direction: column; gap: 1.2rem; }
 .game-detail-title {
@@ -941,11 +994,7 @@ textarea.form-input {
   font-weight: 900;
   letter-spacing: 0.06em;
 }
-.game-meta-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-}
+.game-meta-row { display: flex; flex-wrap: wrap; gap: 0.6rem; }
 .meta-tag {
   font-family: var(--font-ui);
   font-size: 0.8rem;
@@ -973,11 +1022,6 @@ textarea.form-input {
 }
 .price-display.free { color: var(--neon-green); }
 
-.divider {
-  height: 1px;
-  background: var(--border-subtle);
-}
-
 /* ─── Add/Edit Form page ───────────────────────────────────────────────────── */
 .form-page {
   max-width: 760px;
@@ -1003,10 +1047,7 @@ textarea.form-input {
 }
 
 /* ─── 404 ──────────────────────────────────────────────────────────────────── */
-.error-page {
-  text-align: center;
-  padding: 8rem 2rem;
-}
+.error-page { text-align: center; padding: 8rem 2rem; }
 .error-code {
   font-family: var(--font-display);
   font-size: clamp(5rem, 15vw, 10rem);
@@ -1029,11 +1070,7 @@ textarea.form-input {
   background: var(--bg-deep);
   padding: 2rem;
 }
-.footer-inner {
-  max-width: 1400px;
-  margin: 0 auto;
-  text-align: center;
-}
+.footer-inner { max-width: 1400px; margin: 0 auto; text-align: center; }
 .footer-logo {
   font-family: var(--font-display);
   font-size: 1rem;
@@ -1103,7 +1140,6 @@ textarea.form-input {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Stagger children */
 .games-grid .game-card:nth-child(1)  { animation-delay: 0.05s; }
 .games-grid .game-card:nth-child(2)  { animation-delay: 0.10s; }
 .games-grid .game-card:nth-child(3)  { animation-delay: 0.15s; }
@@ -1112,7 +1148,7 @@ textarea.form-input {
 .games-grid .game-card:nth-child(6)  { animation-delay: 0.30s; }
 .games-grid .game-card:nth-child(n+7){ animation-delay: 0.35s; }
 
-/* Modal / confirm dialog */
+/* ─── Modal / confirm dialog ───────────────────────────────────────────────── */
 .modal-overlay {
   display: none;
   position: fixed;

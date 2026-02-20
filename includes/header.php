@@ -2,7 +2,6 @@
 // includes/header.php
 require_once dirname(__DIR__) . '/config/config.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
-
 $flash = getFlash();
 $currentPage = basename($_SERVER['PHP_SELF']);
 ?>
@@ -17,22 +16,36 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?= APP_URL ?>/assets/style.css">
     <link rel="icon" type="image/svg+xml" href="<?= APP_URL ?>/assets/favicon.svg">
+    <style>
+        .user-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid rgba(103, 193, 245, 0.5);
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+        .user-tag {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .steam-username {
+            color: #67c1f5;
+        }
+    </style>
 </head>
 <body>
-
 <!-- Scanline overlay -->
 <div class="scanlines"></div>
-
 <!-- Noise texture -->
 <div class="noise"></div>
-
 <header class="site-header">
     <div class="header-inner">
         <a href="<?= APP_URL ?>/index.php" class="logo">
             <img src="<?= APP_URL ?>/assets/logo.png" alt="WG" class="logo-img">
-            <!--<span class="logo-text">WIKI<span class="logo-accent">GAMES</span></span>-->
         </a>
-
         <nav class="main-nav">
             <a href="<?= APP_URL ?>/index.php" class="nav-link <?= $currentPage === 'index.php' ? 'active' : '' ?>">
                 <span class="nav-icon">◈</span> Catalogue
@@ -43,12 +56,16 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             </a>
             <?php endif; ?>
         </nav>
-
         <div class="header-auth">
             <?php if (isLoggedIn()): ?>
                 <span class="user-tag">
-                    <span class="user-icon">◉</span>
-                    <?= sanitize($_SESSION['username']) ?>
+                    <?php if (!empty($_SESSION['steam_avatar'])): ?>
+                        <img src="<?= sanitize($_SESSION['steam_avatar']) ?>" alt="avatar" class="user-avatar">
+                        <span class="steam-username"><?= sanitize($_SESSION['username']) ?></span>
+                    <?php else: ?>
+                        <span class="user-icon">◉</span>
+                        <?= sanitize($_SESSION['username']) ?>
+                    <?php endif; ?>
                     <?php if (isAdmin()): ?><span class="admin-badge">ADMIN</span><?php endif; ?>
                 </span>
                 <a href="<?= APP_URL ?>/logout.php" class="btn-ghost">Déconnexion</a>
@@ -57,13 +74,11 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <a href="<?= APP_URL ?>/register.php" class="btn-neon">Inscription</a>
             <?php endif; ?>
         </div>
-
         <button class="hamburger" onclick="toggleMenu()" aria-label="Menu">
             <span></span><span></span><span></span>
         </button>
     </div>
 </header>
-
 <?php if ($flash): ?>
 <div class="flash-message flash-<?= $flash['type'] ?>" id="flash-msg">
     <span class="flash-icon"><?= $flash['type'] === 'success' ? '✓' : '✕' ?></span>
@@ -71,5 +86,4 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <button onclick="this.parentElement.remove()" class="flash-close">×</button>
 </div>
 <?php endif; ?>
-
 <main class="main-content">
