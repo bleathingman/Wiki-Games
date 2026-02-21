@@ -87,60 +87,72 @@ function getOwnedGames(string $steamId): array {
 
 // ─── Récupère l'inventaire complet avec pagination ───────────────────────────
 
-function fetchInventoryFull(string $steamId, int $appId): array {
-    global $debug;
-
-    // Tente les contextids les plus courants
-    $contextIds = [2, 1, 6];
-
-    foreach ($contextIds as $contextId) {
-        $allAssets   = [];
-        $allDesc     = [];
-        $lastAssetId = null;
-        $page        = 0;
-
-        do {
-            $url = "https://steamcommunity.com/inventory/{$steamId}/{$appId}/{$contextId}?l=english&count=75";
-            if ($lastAssetId) $url .= "&start_assetid={$lastAssetId}";
-
-            $data = steamCurl($url);
-            if (!$data || empty($data['assets'])) break;
-
-            $allAssets = array_merge($allAssets, $data['assets']);
-            foreach ($data['descriptions'] ?? [] as $d) {
-                $allDesc[$d['classid'] . '_' . $d['instanceid']] = $d;
-            }
-
-            $more        = $data['more_items'] ?? 0;
-            $lastAssetId = $data['last_assetid'] ?? null;
-            $page++;
-
-            if ($debug) echo "  [ctx{$contextId}] Page {$page}: " . count($data['assets']) . " assets | more: {$more}\n";
-            if ($more) sleep(2);
-
-        } while (!empty($data['more_items']) && $lastAssetId && $page < 100);
-
-        if (!empty($allAssets)) {
-            if ($debug) echo "  → contextid {$contextId} fonctionne ({count($allAssets)} assets)\n";
-            return ['assets' => $allAssets, 'descriptions' => $allDesc];
-        }
-
-        usleep(500000); // 500ms entre chaque tentative de contextid
+function probeInventory(string $steamId, int $appId): ?int {
+    foreach ([2, 1, 6] as $contextId) {
+        $data = steamCurl("https://steamcommunity.com/inventory/{$steamId}/{$appId}/{$contextId}?l=english&count=1");
+        if ($data && !empty($data['assets'])) return $contextId;
+        usleep(200000);
     }
+    return null;
+}
 
-    return ['assets' => [], 'descriptions' => []];
+function hasSteamMarket(int $appId): bool {
+    static $cache = [];
+    if (isset($cache[$appId])) return $cache[$appId];
+    $data = steamCurl("https://store.steampowered.com/api/appdetails?appids={$appId}&filters=categories");
+    $categories = $data[$appId]['data']['categories'] ?? [];
+    foreach ($categories as $cat) {
+        if (in_array($cat['id'], [29, 30])) { $cache[$appId] = true; return true; }
+    }
+    $cache[$appId] = false;
+    return false;
+}
+
+function fetchInventoryFull(string $steamId, int $appId, int $contextId): array {
+    global $debug;
+    $allAssets = []; $allDesc = []; $lastAssetId = null; $page = 0;
+    do {
+        $url = "https://steamcommunity.com/inventory/{$steamId}/{$appId}/{$contextId}?l=english&count=75";
+        if ($lastAssetId) $url .= "&start_assetid={$lastAssetId}";
+        $data = steamCurl($url);
+        if (!$data || empty($data['assets'])) break;
+        $allAssets = array_merge($allAssets, $data['assets']);
+        foreach ($data['descriptions'] ?? [] as $d) {
+            $allDesc[$d['classid'] . '_' . $d['instanceid']] = $d;
+        }
+        $more = $data['more_items'] ?? 0; $lastAssetId = $data['last_assetid'] ?? null; $page++;
+        if ($debug) echo "  Page {$page}: " . count($data['assets']) . " assets | more: {$more}\n";
+        if ($more) sleep(2);
+    } while ($more && $lastAssetId && $page < 100);
+    return ['assets' => $allAssets, 'descriptions' => $allDesc];
 }
 
 // ─── Prix du marché ──────────────────────────────────────────────────────────
 
-function fetchMarketPrice(int $appId, string $marketHashName): float {
+$_priceCache = [];
+
+function loadBulkPrices(int $appId): bool {
+    global $_priceCache;
+    if (isset($_priceCache[$appId])) return true;
+    $url  = "https://api.steampowered.com/ISteamEconomy/GetAssetPrices/v1/?appid={$appId}&currency=3&language=fr&key=" . STEAM_API_KEY;
+    $data = steamCurl($url);
+    $items = $data['result']['assets'] ?? null;
+    if ($items === null) return false;
+    $_priceCache[$appId] = [];
+    foreach ($items as $item) {
+        $name  = $item['name'] ?? null;
+        $price = isset($item['prices']['EUR']) ? (float)$item['prices']['EUR'] / 100 : 0.0;
+        if ($name && $price > 0) $_priceCache[$appId][$name] = $price;
+    }
+    return true;
+}
+
+function fetchMarketPriceSingle(int $appId, string $marketHashName): float {
     $url  = "https://steamcommunity.com/market/priceoverview/?appid={$appId}&currency=3&market_hash_name=" . urlencode($marketHashName);
     $data = steamCurl($url);
     if (!$data || empty($data['success'])) return 0.0;
-
     $raw = $data['lowest_price'] ?? $data['median_price'] ?? '';
     if (empty($raw)) return 0.0;
-
     $cleaned = preg_replace('/[^\d,\.]/', '', $raw);
     if (strpos($cleaned, '.') !== false && strpos($cleaned, ',') !== false) {
         $cleaned = str_replace('.', '', $cleaned);
@@ -149,6 +161,19 @@ function fetchMarketPrice(int $appId, string $marketHashName): float {
         $cleaned = str_replace(',', '.', $cleaned);
     }
     return (float) $cleaned;
+}
+
+function fetchMarketPrice(int $appId, string $marketHashName): float {
+    global $_priceCache;
+    if (in_array($appId, [440, 730])) {
+        if (!isset($_priceCache[$appId])) loadBulkPrices($appId);
+        $price = $_priceCache[$appId][$marketHashName] ?? 0.0;
+        if ($price > 0) return $price;
+        usleep(300000);
+        return fetchMarketPriceSingle($appId, $marketHashName);
+    }
+    usleep(300000);
+    return fetchMarketPriceSingle($appId, $marketHashName);
 }
 
 // ─── Calcul principal ────────────────────────────────────────────────────────
@@ -298,9 +323,28 @@ foreach ($ownedGames as $game) {
 
     if ($debug) echo "=== {$gameName} (appid {$appId}) ===\n";
 
-    sleep(1); // 1 seconde entre chaque jeu
+    sleep(1);
 
-    $inv = fetchInventoryFull($steamId, $appId);
+    // Précharge les prix bulk pour TF2/CS2
+    if (in_array($appId, [440, 730]) && !isset($GLOBALS['_priceCache'][$appId])) {
+        if ($debug) echo "  Chargement des prix en masse...\n";
+        loadBulkPrices($appId);
+        if ($debug) echo "  " . count($GLOBALS['_priceCache'][$appId] ?? []) . " prix chargés\n";
+    }
+
+    $isKnownGame = in_array($appId, $knownInventoryGames);
+    if (!$isKnownGame && !hasSteamMarket($appId)) {
+        if ($debug) echo "  → Pas de marché Steam\n\n";
+        continue;
+    }
+
+    $contextId = probeInventory($steamId, $appId);
+    if ($contextId === null) {
+        if ($debug) echo "  → Inventaire vide/privé\n\n";
+        continue;
+    }
+
+    $inv = fetchInventoryFull($steamId, $appId, $contextId);
 
     if (empty($inv['assets'])) {
         if ($debug) echo "  → Pas d'inventaire\n\n";
@@ -326,8 +370,6 @@ foreach ($ownedGames as $game) {
 
         $marketHashName = $desc['market_hash_name'] ?? null;
         if (!$marketHashName) continue;
-
-        usleep(300000); // 300ms entre chaque prix
 
         $unitPrice  = fetchMarketPrice($appId, $marketHashName);
         $lineTotal  = round($unitPrice * $count, 2);

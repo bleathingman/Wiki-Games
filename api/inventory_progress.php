@@ -1,12 +1,21 @@
 <?php
 // api/inventory_progress.php — Stream SSE de progression en temps réel
-set_time_limit(600);
+
+// Doit être AVANT tout require pour overrider php.ini
+ini_set('max_execution_time', 0);
 ini_set('output_buffering', 'off');
 ini_set('zlib.output_compression', false);
+set_time_limit(0);
 
 require_once dirname(__DIR__) . '/config/config.php';
 require_once dirname(__DIR__) . '/config/database.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
+
+// Ferme la session immédiatement — sinon elle bloque les requêtes parallèles
+// et cause des timeouts sur les connexions SSE longues
+if (session_status() === PHP_SESSION_ACTIVE) {
+    session_write_close();
+}
 
 // Headers SSE
 header('Content-Type: text/event-stream');
@@ -96,30 +105,92 @@ function getOwnedGames(string $steamId): array {
     return $data['response']['games'] ?? [];
 }
 
-function fetchInventoryFull(string $steamId, int $appId): array {
+// Cache mémoire des résultats de sonde pour éviter les doublons
+$_probeCache = [];
+
+// Vérifie rapidement si un jeu a un inventaire accessible (1 seule requête)
+function probeInventory(string $steamId, int $appId): ?int {
+    global $_probeCache;
+    if (isset($_probeCache[$appId])) return $_probeCache[$appId];
+
     foreach ([2, 1, 6] as $contextId) {
-        $allAssets = []; $allDesc = []; $lastAssetId = null; $page = 0;
-        do {
-            $url  = "https://steamcommunity.com/inventory/{$steamId}/{$appId}/{$contextId}?l=english&count=75";
-            if ($lastAssetId) $url .= "&start_assetid={$lastAssetId}";
-            $data = steamCurl($url);
-            if (!$data || empty($data['assets'])) break;
-            $allAssets = array_merge($allAssets, $data['assets']);
-            foreach ($data['descriptions'] ?? [] as $d) {
-                $allDesc[$d['classid'] . '_' . $d['instanceid']] = $d;
-            }
-            $more = $data['more_items'] ?? 0;
-            $lastAssetId = $data['last_assetid'] ?? null;
-            $page++;
-            if ($more) sleep(2);
-        } while ($more && $lastAssetId && $page < 100);
-        if (!empty($allAssets)) return ['assets' => $allAssets, 'descriptions' => $allDesc];
-        usleep(500000);
+        $data = steamCurl("https://steamcommunity.com/inventory/{$steamId}/{$appId}/{$contextId}?l=english&count=1");
+        if ($data && !empty($data['assets'])) {
+            $_probeCache[$appId] = $contextId;
+            return $contextId;
+        }
+        usleep(200000); // 200ms entre les tentatives
     }
-    return ['assets' => [], 'descriptions' => []];
+    $_probeCache[$appId] = null;
+    return null;
 }
 
-function fetchMarketPrice(int $appId, string $marketHashName): float {
+// Vérifie via l'API Steam Store si un jeu a des éléments échangeables (trading cards, market)
+function hasSteamMarket(int $appId): bool {
+    static $cache = [];
+    if (isset($cache[$appId])) return $cache[$appId];
+
+    $data = steamCurl("https://store.steampowered.com/api/appdetails?appids={$appId}&filters=categories");
+    $categories = $data[$appId]['data']['categories'] ?? [];
+    foreach ($categories as $cat) {
+        // 29 = Trading Cards, 8 = Valve Anti-Cheat, 12 = Online Multi (souvent inventory)
+        // On check surtout 29 (Trading Cards) et on inclut les jeux VAC car souvent ils ont un marché
+        if (in_array($cat['id'], [29, 30])) { // 29=Trading Cards, 30=Steam Workshop
+            $cache[$appId] = true;
+            return true;
+        }
+    }
+    $cache[$appId] = false;
+    return false;
+}
+
+function fetchInventoryFull(string $steamId, int $appId, int $contextId): array {
+    $allAssets = []; $allDesc = []; $lastAssetId = null; $page = 0;
+    do {
+        $url  = "https://steamcommunity.com/inventory/{$steamId}/{$appId}/{$contextId}?l=english&count=75";
+        if ($lastAssetId) $url .= "&start_assetid={$lastAssetId}";
+        $data = steamCurl($url);
+        if (!$data || empty($data['assets'])) break;
+        $allAssets = array_merge($allAssets, $data['assets']);
+        foreach ($data['descriptions'] ?? [] as $d) {
+            $allDesc[$d['classid'] . '_' . $d['instanceid']] = $d;
+        }
+        $more = $data['more_items'] ?? 0;
+        $lastAssetId = $data['last_assetid'] ?? null;
+        $page++;
+        if ($more) sleep(2);
+    } while ($more && $lastAssetId && $page < 100);
+    return ['assets' => $allAssets, 'descriptions' => $allDesc];
+}
+
+// Cache en mémoire des prix par appid
+$_priceCache = [];
+
+// Charge TOUS les prix d'un jeu en une seule requête Steam Economy API
+function loadBulkPrices(int $appId): bool {
+    global $_priceCache;
+    if (isset($_priceCache[$appId])) return true;
+
+    $url  = "https://api.steampowered.com/ISteamEconomy/GetAssetPrices/v1/?appid={$appId}&currency=3&language=fr&key=" . STEAM_API_KEY;
+    $data = steamCurl($url);
+    $items = $data['result']['assets'] ?? null;
+
+    if ($items === null) return false;
+
+    $_priceCache[$appId] = [];
+    foreach ($items as $item) {
+        $name  = $item['name'] ?? null;
+        // Prix en centimes → euros
+        $price = isset($item['prices']['EUR']) ? (float)$item['prices']['EUR'] / 100 : 0.0;
+        if ($name && $price > 0) {
+            $_priceCache[$appId][$name] = $price;
+        }
+    }
+    return true;
+}
+
+// Fallback : prix unitaire via Steam Market (pour les jeux sans bulk API)
+function fetchMarketPriceSingle(int $appId, string $marketHashName): float {
     $url  = "https://steamcommunity.com/market/priceoverview/?appid={$appId}&currency=3&market_hash_name=" . urlencode($marketHashName);
     $data = steamCurl($url);
     if (!$data || empty($data['success'])) return 0.0;
@@ -135,6 +206,25 @@ function fetchMarketPrice(int $appId, string $marketHashName): float {
     return (float) $cleaned;
 }
 
+// Récupère le prix : bulk d'abord, fallback unitaire sinon
+function fetchMarketPrice(int $appId, string $marketHashName): float {
+    global $_priceCache;
+
+    // TF2 (440) et CS2 (730) : on utilise le bulk pricing
+    if (in_array($appId, [440, 730])) {
+        if (!isset($_priceCache[$appId])) loadBulkPrices($appId);
+        $price = $_priceCache[$appId][$marketHashName] ?? 0.0;
+        if ($price > 0) return $price;
+        // Si pas trouvé dans le bulk, fallback unitaire (items récents non indexés)
+        usleep(300000);
+        return fetchMarketPriceSingle($appId, $marketHashName);
+    }
+
+    // Autres jeux : fallback unitaire avec délai
+    usleep(300000);
+    return fetchMarketPriceSingle($appId, $marketHashName);
+}
+
 function processInventory(array $inv, int $appId): array {
     $itemCounts = [];
     foreach ($inv['assets'] as $asset) {
@@ -147,7 +237,7 @@ function processInventory(array $inv, int $appId): array {
         if (!$desc || empty($desc['marketable'])) continue;
         $marketHashName = $desc['market_hash_name'] ?? null;
         if (!$marketHashName) continue;
-        usleep(300000);
+        // Pas de usleep pour TF2/CS2 car les prix sont en cache bulk
         $unitPrice = fetchMarketPrice($appId, $marketHashName);
         $lineTotal = round($unitPrice * $count, 2);
         $gameTotal += $lineTotal;
@@ -243,7 +333,32 @@ foreach ($ownedGames as $idx => $game) {
     ]);
 
     sleep(1);
-    $inv = fetchInventoryFull($steamId, $appId);
+
+    // Étape 1 : Vérifie via le Store Steam si le jeu a des trading cards / workshop
+    // (évite les requêtes inutiles pour les jeux sans marché)
+    $isKnownGame = in_array($appId, $knownInventoryGames);
+    if (!$isKnownGame && !hasSteamMarket($appId)) {
+        sendEvent('progress', ['step' => "⏭ [{$checked}] {$gameName} — pas de marché Steam", 'game' => $gameName, 'elapsed' => time() - $startTime]);
+        continue;
+    }
+
+    // Étape 2 : Sonde rapide (1 item) pour voir si l'inventaire existe
+    $contextId = probeInventory($steamId, $appId);
+    if ($contextId === null) {
+        sendEvent('progress', ['step' => "⏭ [{$checked}] {$gameName} — inventaire vide/privé", 'game' => $gameName, 'elapsed' => time() - $startTime]);
+        continue;
+    }
+
+    // Étape 3 : Précharge les prix en bulk pour TF2/CS2 (1 requête = tous les prix)
+    if (in_array($appId, [440, 730]) && !isset($GLOBALS['_priceCache'][$appId])) {
+        sendEvent('progress', ['step' => "📦 Chargement des prix {$gameName} en masse...", 'game' => $gameName, 'elapsed' => time() - $startTime]);
+        loadBulkPrices($appId);
+        $loaded = count($GLOBALS['_priceCache'][$appId] ?? []);
+        sendEvent('progress', ['step' => "📦 {$loaded} prix {$gameName} chargés en 1 requête ✅", 'game' => $gameName, 'elapsed' => time() - $startTime]);
+    }
+
+    // Étape 4 : Fetch complet seulement si la sonde a réussi
+    $inv = fetchInventoryFull($steamId, $appId, $contextId);
 
     if (empty($inv['assets'])) continue;
 
